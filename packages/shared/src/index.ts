@@ -131,6 +131,25 @@ export interface HistoryEntry {
   recommendations: Recommendation[];
 }
 
+/** 로그인 제공자 — dev는 개발용(프로덕션 비활성) */
+export type AuthProvider = 'kakao' | 'apple' | 'dev';
+
+export interface UserProfile {
+  id: string;
+  provider: AuthProvider;
+  nickname: string;
+  email?: string;
+  /** 약관 동의 시각 (가입 시 필수) */
+  termsAgreedAt: string; // ISO 8601 UTC
+  createdAt: string; // ISO 8601 UTC
+}
+
+export interface AuthResponse {
+  /** Bearer 토큰 (30일) */
+  token: string;
+  user: UserProfile;
+}
+
 /** 푸시 알림 디바이스 등록 (기획서 §3.2) */
 export interface DeviceRegistration {
   /** FCM 디바이스 토큰 */

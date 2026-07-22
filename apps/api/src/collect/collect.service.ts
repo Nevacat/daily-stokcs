@@ -124,7 +124,7 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       );
 
       // 관심 종목에 "새로" 등장한 추천만 푸시 (기획서 §3.2 — FCM 키 설정 시 발송)
-      const favoriteTickers = new Set(this.favoritesService.get().tickers);
+      const favoriteTickers = this.favoritesService.allFavoriteTickers();
       const newFavoriteRecs = recommendations.filter(
         (r) => favoriteTickers.has(r.ticker) && !prevTickers.has(r.ticker),
       );
