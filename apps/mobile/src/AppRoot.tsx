@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { History, Home, Newspaper, Settings } from 'lucide-react-native';
+import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { spacing } from './theme/tokens';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { LoginScreen } from './screens/LoginScreen';
 import { NewsScreen } from './screens/NewsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
@@ -23,8 +32,21 @@ const TABS: { key: Tab; label: string; Icon: typeof Home }[] = [
 
 function Shell() {
   const { colors, scheme } = useTheme();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('home');
+
+  // 세션 복원 중 → 스플래시, 비로그인 → 로그인 화면
+  if (user === null) {
+    return (
+      <View style={[styles.splash, { backgroundColor: colors.backgroundSoft }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+  if (user === false) {
+    return <LoginScreen />;
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.backgroundSoft }}>
@@ -71,7 +93,9 @@ export function AppRoot() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Shell />
+        <AuthProvider>
+          <Shell />
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
@@ -84,4 +108,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   tabItem: { flex: 1, alignItems: 'center', gap: 3 },
+  splash: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
