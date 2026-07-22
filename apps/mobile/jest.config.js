@@ -8,5 +8,8 @@ module.exports = {
     // lucide의 .mjs(ESM) 빌드는 jest가 파싱하지 못하므로 CJS 빌드로 매핑
     '^lucide-react-native$':
       '<rootDir>/../../node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    // 네이티브 모듈은 인메모리 mock 사용
+    '^@react-native-async-storage/async-storage$':
+      '<rootDir>/__mocks__/async-storage.js',
   },
 };
