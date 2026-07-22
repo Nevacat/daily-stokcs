@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { CollectRun, NewsItem } from '@daily-stocks/shared';
+import { HistoryService } from '../history/history.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { SettingsService } from '../settings/settings.service';
@@ -32,6 +33,7 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
     private readonly newsService: NewsService,
     private readonly recommendationService: RecommendationService,
     private readonly settingsService: SettingsService,
+    private readonly historyService: HistoryService,
   ) {}
 
   onModuleInit(): void {
@@ -106,7 +108,10 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       });
 
       const added = this.newsService.upsert(analyzed);
-      this.recommendationService.regenerate(this.newsService.findAll());
+      const recommendations = this.recommendationService.regenerate(
+        this.newsService.findAll(),
+      );
+      this.historyService.record(recommendations); // 날짜별 스냅샷 (기획서 §3.3)
 
       run.status = 'done';
       run.newsCount = added.length;

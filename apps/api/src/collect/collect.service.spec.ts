@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { HistoryService } from '../history/history.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { SettingsService } from '../settings/settings.service';
@@ -23,6 +24,7 @@ function makeService(articles: RawArticle[]) {
     newsService,
     new RecommendationService(),
     new SettingsService(),
+    new HistoryService(),
   );
   return { service, newsService };
 }
@@ -85,6 +87,7 @@ describe('CollectService', () => {
       new NewsService(),
       new RecommendationService(),
       new SettingsService(),
+      new HistoryService(),
     );
 
     await expect(service.run('manual')).rejects.toThrow('network');

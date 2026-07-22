@@ -4,6 +4,7 @@ import type {
   CollectRun,
   CollectSettings,
   Favorites,
+  HistoryEntry,
   NewsItem,
   Recommendation,
   Sector,
@@ -50,6 +51,9 @@ export const api = {
     const qs = query.toString();
     return request<ApiResponse<NewsItem[]>>(`/news${qs ? `?${qs}` : ''}`);
   },
+
+  history: (limit = 14) =>
+    request<ApiResponse<HistoryEntry[]>>(`/history?limit=${limit}`),
 
   favorites: () => request<ApiResponse<Favorites>>('/favorites'),
 
