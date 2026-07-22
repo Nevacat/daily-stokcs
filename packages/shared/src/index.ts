@@ -63,6 +63,24 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 데일리 브리핑 (기획서 §3.4 — 오늘의 시장 요약 + 주목 섹터 + Top 3) */
+export interface DailyBriefing {
+  /** KST 기준 YYYY-MM-DD */
+  date: string;
+  generatedAt: string; // ISO 8601 UTC
+  /** 오늘(KST) 수집 뉴스 감성 분포 */
+  marketSummary: {
+    total: number;
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
+  /** 긍정 뉴스가 많은 섹터 상위 3 */
+  topSectors: { sector: Sector; positiveCount: number }[];
+  /** 점수 상위 추천 3 */
+  topPicks: Recommendation[];
+}
+
 /** 날짜별 추천 스냅샷 (기획서 §3.3 — 해당 날짜의 마지막 추천 결과) */
 export interface HistoryEntry {
   /** KST 기준 YYYY-MM-DD */

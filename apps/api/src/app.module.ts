@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BriefingModule } from './briefing/briefing.module';
 import { CollectModule } from './collect/collect.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { HistoryModule } from './history/history.module';
@@ -16,6 +17,7 @@ import { SettingsModule } from './settings/settings.module';
     SettingsModule,
     FavoritesModule,
     HistoryModule,
+    BriefingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
