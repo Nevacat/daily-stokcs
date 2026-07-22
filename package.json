@@ -1,0 +1,22 @@
+{
+  "name": "daily-stocks",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api:dev": "npm run start:dev -w api",
+    "api:build": "npm run build -w api",
+    "api:test": "npm run test -w api",
+    "mobile:start": "npm run start -w mobile",
+    "mobile:ios": "npm run ios -w mobile",
+    "mobile:android": "npm run android -w mobile",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
