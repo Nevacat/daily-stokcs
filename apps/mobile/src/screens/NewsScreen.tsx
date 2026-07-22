@@ -27,6 +27,7 @@ export function NewsScreen() {
 
   const load = useCallback(async () => {
     const seq = ++requestSeq.current;
+    setCursor(undefined); // 이전 필터의 커서로 loadMore가 나가는 것을 즉시 차단
     try {
       const res = await api.news({
         sector: sector ?? undefined,

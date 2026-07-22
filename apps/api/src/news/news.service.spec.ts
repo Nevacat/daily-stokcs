@@ -74,9 +74,24 @@ describe('NewsService', () => {
   });
 
   describe('보존 정책', () => {
-    it('7일이 지난 뉴스는 수집 시 제거된다', () => {
-      service.upsert([news(1), news(8 * 24)], NOW);
+    it('7일이 지난 후보는 신규로 집계되지 않는다', () => {
+      const added = service.upsert([news(1), news(8 * 24)], NOW);
+      expect(added).toHaveLength(1);
       expect(service.findAll()).toHaveLength(1);
+    });
+
+    it('신규 뉴스가 없어도 기존의 만료된 뉴스는 프루닝된다', () => {
+      service.upsert([news(1)], NOW);
+      const later = new Date(NOW.getTime() + 8 * 24 * 3_600_000);
+      const added = service.upsert([], later);
+      expect(added).toHaveLength(0);
+      expect(service.findAll()).toHaveLength(0);
+    });
+
+    it('7일 지난 기사가 피드에 남아 있어도 매 수집마다 재집계되지 않는다', () => {
+      const stale = news(8 * 24);
+      expect(service.upsert([stale], NOW)).toHaveLength(0);
+      expect(service.upsert([stale], NOW)).toHaveLength(0);
     });
   });
 });
