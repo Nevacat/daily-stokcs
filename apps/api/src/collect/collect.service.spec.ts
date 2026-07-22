@@ -1,7 +1,10 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { FavoritesService } from '../favorites/favorites.service';
 import { HistoryService } from '../history/history.service';
+import { DevicesService } from '../notifications/devices.service';
+import { NotificationService } from '../notifications/notification.service';
 import { PriceService } from '../price/price.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
@@ -27,6 +30,8 @@ function makeService(articles: RawArticle[]) {
     new SettingsService(),
     new HistoryService(),
     new PriceService(),
+    new FavoritesService(),
+    new NotificationService(new DevicesService()),
   );
   return { service, newsService };
 }
@@ -91,6 +96,8 @@ describe('CollectService', () => {
       new SettingsService(),
       new HistoryService(),
       new PriceService(),
+      new FavoritesService(),
+      new NotificationService(new DevicesService()),
     );
 
     await expect(service.run('manual')).rejects.toThrow('network');

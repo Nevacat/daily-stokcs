@@ -17,6 +17,11 @@ CLAUDE.local.md
 # API 로컬 데이터 (MVP JSON 저장소)
 apps/api/data/
 
+# 외부 서비스 키 (FCM 서비스 계정 JSON 등)
+apps/api/secrets/
+apps/mobile/ios/DailyStocks/GoogleService-Info.plist
+apps/mobile/android/app/google-services.json
+
 # React Native
 apps/mobile/ios/Pods/
 apps/mobile/ios/build/

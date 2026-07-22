@@ -8,8 +8,10 @@ import {
 import { randomUUID } from 'crypto';
 import type { CollectRun, NewsItem } from '@daily-stocks/shared';
 import { JsonStore } from '../common/json-store';
+import { FavoritesService } from '../favorites/favorites.service';
 import { HistoryService } from '../history/history.service';
 import { NewsService } from '../news/news.service';
+import { NotificationService } from '../notifications/notification.service';
 import { PriceService } from '../price/price.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { SettingsService } from '../settings/settings.service';
@@ -38,6 +40,8 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
     private readonly settingsService: SettingsService,
     private readonly historyService: HistoryService,
     private readonly priceService: PriceService,
+    private readonly favoritesService: FavoritesService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   onModuleInit(): void {
@@ -112,8 +116,20 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       });
 
       const added = this.newsService.upsert(analyzed);
+      const prevTickers = new Set(
+        this.recommendationService.findAll().map((r) => r.ticker),
+      );
       const recommendations = this.recommendationService.regenerate(
         this.newsService.findAll(),
+      );
+
+      // 관심 종목에 "새로" 등장한 추천만 푸시 (기획서 §3.2 — FCM 키 설정 시 발송)
+      const favoriteTickers = new Set(this.favoritesService.get().tickers);
+      const newFavoriteRecs = recommendations.filter(
+        (r) => favoriteTickers.has(r.ticker) && !prevTickers.has(r.ticker),
+      );
+      await this.notificationService.notifyNewFavoriteRecommendations(
+        newFavoriteRecs,
       );
       // 추천 시점 주가 기록 — 주가 API 키 미설정이면 null (적중률 비활성)
       const prices = await this.priceService.getPrices(

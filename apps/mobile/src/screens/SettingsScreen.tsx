@@ -95,6 +95,17 @@ export function SettingsScreen() {
         </Card>
       </View>
 
+      {/* 푸시 알림 (기획서 §3.2 — Firebase 키 설정 시 활성화) */}
+      <View style={{ gap: spacing.sm }}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>알림</Text>
+        <Card>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 19 }}>
+            관심 종목에 새 추천이 생기면 푸시로 알려드립니다. Firebase 키 설정
+            후 활성화됩니다 (설정 방법: apps/mobile/src/push/README.md).
+          </Text>
+        </Card>
+      </View>
+
       {error && (
         <Card>
           <Text style={{ color: colors.danger, fontSize: 13 }}>{error}</Text>
