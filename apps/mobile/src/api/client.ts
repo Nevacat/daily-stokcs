@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import type {
   ApiResponse,
   CollectRun,
@@ -20,11 +20,37 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
-  const body = (await res.json()) as T & { error?: { message: string } };
-  if (!res.ok) {
-    throw new Error(body.error?.message ?? `요청 실패 (${res.status})`);
+
+  // 비-JSON 응답(HTML 에러 페이지, 빈 body)에도 상태코드 정보를 잃지 않는다
+  const text = await res.text();
+  let body: unknown = null;
+  try {
+    body = text ? (JSON.parse(text) as unknown) : null;
+  } catch {
+    body = null;
   }
-  return body;
+
+  if (!res.ok) {
+    const message =
+      body !== null &&
+      typeof body === 'object' &&
+      'error' in body &&
+      typeof (body as { error: { message?: unknown } }).error?.message === 'string'
+        ? (body as { error: { message: string } }).error.message
+        : `요청 실패 (${res.status})`;
+    throw new Error(message);
+  }
+  if (body === null) {
+    throw new Error('서버 응답을 해석할 수 없습니다.');
+  }
+  return body as T;
+}
+
+/** 외부 링크는 http(s)만 연다 (피드 오염 시 tel:/sms: 등 임의 스킴 방어) */
+export function openExternalUrl(url: string): void {
+  if (/^https?:\/\//i.test(url)) {
+    void Linking.openURL(url);
+  }
 }
 
 export const api = {

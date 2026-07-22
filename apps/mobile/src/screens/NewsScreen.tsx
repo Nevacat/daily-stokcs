@@ -1,15 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  FlatList,
-  Linking,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
 import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
-import { api, formatKst } from '../api/client';
+import { api, formatKst, openExternalUrl } from '../api/client';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -29,17 +22,22 @@ export function NewsScreen() {
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 필터 변경 후 도착한 이전 요청 응답을 무시하기 위한 시퀀스 토큰
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current;
     try {
       const res = await api.news({
         sector: sector ?? undefined,
         sentiment: sentiment ?? undefined,
       });
+      if (seq !== requestSeq.current) return; // 이미 다른 필터로 재요청됨
       setItems(res.data);
       setCursor(res.meta?.cursor);
       setError(null);
     } catch (e) {
+      if (seq !== requestSeq.current) return;
       setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했습니다.');
     }
   }, [sector, sentiment]);
@@ -50,6 +48,7 @@ export function NewsScreen() {
 
   const loadMore = async () => {
     if (!cursor || loadingMore) return;
+    const seq = requestSeq.current;
     setLoadingMore(true);
     try {
       const res = await api.news({
@@ -57,6 +56,7 @@ export function NewsScreen() {
         sentiment: sentiment ?? undefined,
         cursor,
       });
+      if (seq !== requestSeq.current) return; // 필터가 바뀐 뒤 도착한 응답은 버림
       setItems(prev => [...prev, ...res.data]);
       setCursor(res.meta?.cursor);
     } catch {
@@ -123,7 +123,7 @@ export function NewsScreen() {
           ) : null
         }
         renderItem={({ item }) => (
-          <Card onPress={() => void Linking.openURL(item.url)} style={{ gap: 6 }}>
+          <Card onPress={() => openExternalUrl(item.url)} style={{ gap: 6 }}>
             <View style={styles.badgeRow}>
               <SentimentBadge sentiment={item.sentiment} />
               {item.sectors.slice(0, 2).map(s => (

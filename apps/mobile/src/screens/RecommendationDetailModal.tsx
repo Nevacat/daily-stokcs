@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -11,7 +10,7 @@ import {
 import { ExternalLink, X } from 'lucide-react-native';
 import type { NewsItem, Recommendation } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
-import { api, formatKst } from '../api/client';
+import { api, formatKst, openExternalUrl } from '../api/client';
 import { Card, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
@@ -101,7 +100,7 @@ export function RecommendationDetailModal({
                 {evidence.map(news => (
                   <Card
                     key={news.id}
-                    onPress={() => void Linking.openURL(news.url)}
+                    onPress={() => openExternalUrl(news.url)}
                     style={{ gap: 6 }}
                   >
                     <SentimentBadge sentiment={news.sentiment} />

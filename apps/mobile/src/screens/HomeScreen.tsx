@@ -233,11 +233,13 @@ export function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* 추천 카드 리스트 */}
-        {listRecs.length === 0 && favoriteRecs.length === 0 ? (
+        {/* 추천 카드 리스트 — 섹터 선택 시 해당 섹터가 비어도 안내 문구 표시 */}
+        {listRecs.length === 0 && (sector !== null || favoriteRecs.length === 0) ? (
           <Card>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              아직 추천이 없습니다. 지금 수집하기를 눌러 최신 뉴스를 분석해보세요.
+              {sector !== null
+                ? `${SECTOR_LABELS[sector]} 섹터의 추천이 아직 없습니다.`
+                : '아직 추천이 없습니다. 지금 수집하기를 눌러 최신 뉴스를 분석해보세요.'}
             </Text>
           </Card>
         ) : (
