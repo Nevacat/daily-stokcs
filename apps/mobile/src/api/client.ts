@@ -1,6 +1,7 @@
 import { Linking, Platform } from 'react-native';
 import type {
   ApiResponse,
+  AuthResponse,
   CollectRun,
   CollectSettings,
   DailyBriefing,
@@ -12,16 +13,27 @@ import type {
   Sentiment,
   SentimentTrend,
   StockDetail,
+  UserProfile,
 } from '@daily-stocks/shared';
 
 /** 개발용 로컬 API (Android 에뮬레이터는 10.0.2.2가 호스트) */
 const BASE_URL =
   Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
+/** 로그인 토큰 — AuthContext가 설정하고 모든 요청에 자동 첨부된다 */
+let authToken: string | null = null;
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...init?.headers,
+    },
   });
 
   // 비-JSON 응답(HTML 에러 페이지, 빈 body)에도 상태코드 정보를 잃지 않는다
@@ -57,6 +69,31 @@ export function openExternalUrl(url: string): void {
 }
 
 export const api = {
+  // --- 인증 ---
+  devLogin: (nickname: string, termsAgreed: boolean) =>
+    request<ApiResponse<AuthResponse>>('/auth/dev', {
+      method: 'POST',
+      body: JSON.stringify({ nickname, termsAgreed }),
+    }),
+
+  kakaoLogin: (accessToken: string, termsAgreed: boolean) =>
+    request<ApiResponse<AuthResponse>>('/auth/kakao', {
+      method: 'POST',
+      body: JSON.stringify({ accessToken, termsAgreed }),
+    }),
+
+  appleLogin: (identityToken: string, termsAgreed: boolean, nickname?: string) =>
+    request<ApiResponse<AuthResponse>>('/auth/apple', {
+      method: 'POST',
+      body: JSON.stringify({ identityToken, termsAgreed, nickname }),
+    }),
+
+  me: () => request<ApiResponse<UserProfile>>('/auth/me'),
+
+  withdraw: () =>
+    request<ApiResponse<{ removed: true }>>('/auth/me', { method: 'DELETE' }),
+
+  // --- 데이터 ---
   collect: () => request<ApiResponse<CollectRun>>('/collect', { method: 'POST' }),
 
   collectStatus: () =>
