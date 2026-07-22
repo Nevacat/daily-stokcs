@@ -53,6 +53,7 @@ describe('StocksService', () => {
       ticker: '005930',
       name: '삼성전자',
       sector: 'semiconductor_ai',
+      market: 'KR',
     });
     expect(detail.recommendation?.ticker).toBe('005930');
     expect(detail.trend.days).toHaveLength(7);

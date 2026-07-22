@@ -28,7 +28,12 @@ export class StocksService {
     }
 
     return {
-      stock: { ticker: stock.ticker, name: stock.name, sector: stock.sector },
+      stock: {
+        ticker: stock.ticker,
+        name: stock.name,
+        sector: stock.sector,
+        market: stock.market,
+      },
       recommendation:
         this.recommendationService.findAll().find((r) => r.ticker === ticker) ??
         null,

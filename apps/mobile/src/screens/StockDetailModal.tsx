@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { ExternalLink, X } from 'lucide-react-native';
 import type { StockDetail } from '@daily-stocks/shared';
-import { SECTOR_LABELS } from '@daily-stocks/shared';
+import { MARKET_LABELS, SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { TrendChart } from '../components/TrendChart';
 import { Card, ScorePill, SentimentBadge } from '../components/ui';
@@ -72,6 +72,7 @@ export function StockDetailModal({
                       {detail.stock.name}
                     </Text>
                     <Text style={[styles.stockMeta, { color: colors.indigo }]}>
+                      {MARKET_LABELS[detail.stock.market]} ·{' '}
                       {SECTOR_LABELS[detail.stock.sector]} · {detail.stock.ticker}
                     </Text>
                   </View>

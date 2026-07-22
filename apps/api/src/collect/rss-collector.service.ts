@@ -8,11 +8,21 @@ export interface RawArticle {
   publishedAt: string; // ISO 8601 UTC
 }
 
-/** 경제·증권 카테고리 RSS 피드 (API 키 불필요) */
+/** 경제·증권 카테고리 RSS 피드 (API 키 불필요) — 국내 + 미국 시장 */
 const FEEDS: { press: string; url: string }[] = [
+  // 국내
   { press: '연합뉴스', url: 'https://www.yna.co.kr/rss/economy.xml' },
   { press: '매일경제', url: 'https://www.mk.co.kr/rss/30100041/' },
   { press: '한국경제', url: 'https://www.hankyung.com/feed/economy' },
+  // 미국 (영문 — 분석기가 영문 키워드도 지원)
+  {
+    press: 'CNBC',
+    url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html',
+  },
+  {
+    press: 'MarketWatch',
+    url: 'https://feeds.marketwatch.com/marketwatch/topstories/',
+  },
 ];
 
 @Injectable()

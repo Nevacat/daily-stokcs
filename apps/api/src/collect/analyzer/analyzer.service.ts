@@ -17,25 +17,44 @@ export interface AnalyzedArticle {
   polarity: number;
 }
 
+// 인쇄 가능한 ASCII만으로 이루어진 별칭인지 (영문 별칭 판별)
+const ASCII_ONLY = /^[ -~]+$/;
+
 /**
- * 키워드 사전 기반 분석기 (MVP).
+ * 별칭/키워드 매칭 (한·영 공용, 대소문자 무시).
+ * 짧은 영문 별칭(GM, F 등)이 일반 단어 안에서 오탐되지 않도록
+ * ASCII 별칭은 단어 경계로 매칭한다 (예: 'GM'이 'segment'에 걸리지 않게).
+ */
+function matches(lowerTitle: string, keyword: string): boolean {
+  const lower = keyword.toLowerCase();
+  if (ASCII_ONLY.test(keyword)) {
+    const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`).test(lowerTitle);
+  }
+  return lowerTitle.includes(lower);
+}
+
+/**
+ * 키워드 사전 기반 분석기 (MVP) — 한국어·영어 뉴스 모두 지원.
  * 추후 LLM 분석기로 교체 시 이 클래스만 대체하면 된다 (기획서 §5).
  */
 @Injectable()
 export class AnalyzerService {
   analyze(title: string): AnalyzedArticle {
+    const lower = title.toLowerCase();
+
     const stocks = STOCKS.filter((s) =>
-      s.aliases.some((a) => title.includes(a)),
+      s.aliases.some((a) => matches(lower, a)),
     );
 
     const sectors = new Set<Sector>(stocks.map((s) => s.sector));
     for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
-      if (keywords.some((k) => title.includes(k)))
+      if (keywords.some((k) => matches(lower, k)))
         sectors.add(sector as Sector);
     }
 
-    const positive = POSITIVE_KEYWORDS.filter((k) => title.includes(k)).length;
-    const negative = NEGATIVE_KEYWORDS.filter((k) => title.includes(k)).length;
+    const positive = POSITIVE_KEYWORDS.filter((k) => matches(lower, k)).length;
+    const negative = NEGATIVE_KEYWORDS.filter((k) => matches(lower, k)).length;
     const polarity = positive - negative;
 
     const sentiment: Sentiment =
