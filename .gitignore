@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+dist/
+build/
+coverage/
+
+# env & secrets
+.env
+.env.*
+*.pem
+
+# Claude 개인 설정 (팀 공유 X)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/agent-memory/
+
+# React Native
+apps/mobile/ios/Pods/
+apps/mobile/ios/build/
+apps/mobile/android/build/
+apps/mobile/android/app/build/
+apps/mobile/android/.gradle/
+apps/mobile/vendor/
+*.hprof
+.metro-health-check*
+
+# OS / IDE
+.DS_Store
+.idea/
+*.iml
