@@ -69,6 +69,16 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
+export interface StockDetail {
+  stock: { ticker: string; name: string; sector: Sector };
+  /** 현재 추천 중이 아니면 null */
+  recommendation: Recommendation | null;
+  trend: SentimentTrend;
+  /** 관련 뉴스 최신순 */
+  news: NewsItem[];
+}
+
 /** 데일리 브리핑 (기획서 §3.4 — 오늘의 시장 요약 + 주목 섹터 + Top 3) */
 export interface DailyBriefing {
   /** KST 기준 YYYY-MM-DD */
@@ -146,3 +156,5 @@ export interface ApiResponse<T> {
 export interface ApiError {
   error: { code: string; message: string };
 }
+
+export { STOCKS, type StockEntry } from './stocks';

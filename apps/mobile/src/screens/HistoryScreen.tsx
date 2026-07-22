@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import { api } from '../api/client';
 import { Card, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
+import { StockDetailModal } from './StockDetailModal';
 
 function formatDate(date: string): string {
   const [y, m, d] = date.split('-');
@@ -25,6 +27,7 @@ export function HistoryScreen() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -85,8 +88,9 @@ export function HistoryScreen() {
             </View>
             <Card style={styles.entryCard}>
               {entry.recommendations.map((rec, index) => (
-                <View
+                <Pressable
                   key={rec.id}
+                  onPress={() => setSelectedTicker(rec.ticker)}
                   style={[
                     styles.recRow,
                     index > 0 && {
@@ -121,7 +125,7 @@ export function HistoryScreen() {
                     )}
                     <ScorePill score={rec.score} />
                   </View>
-                </View>
+                </Pressable>
               ))}
             </Card>
           </View>
@@ -132,6 +136,11 @@ export function HistoryScreen() {
         추천 시점 대비 등락률은 서버에 주가 API 키(apps/api/.env의 KIS_APP_KEY)를
         설정하면 표시됩니다.
       </Text>
+
+      <StockDetailModal
+        ticker={selectedTicker}
+        onClose={() => setSelectedTicker(null)}
+      />
     </ScrollView>
   );
 }

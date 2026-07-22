@@ -7,5 +7,6 @@ import { TrendsService } from './trends.service';
   imports: [NewsModule],
   controllers: [TrendsController],
   providers: [TrendsService],
+  exports: [TrendsService],
 })
 export class TrendsModule {}
