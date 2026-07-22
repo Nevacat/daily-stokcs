@@ -6,6 +6,7 @@ import { CollectModule } from './collect/collect.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { HistoryModule } from './history/history.module';
 import { NewsModule } from './news/news.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
 import { SettingsModule } from './settings/settings.module';
 import { TrendsModule } from './trends/trends.module';
@@ -20,6 +21,7 @@ import { TrendsModule } from './trends/trends.module';
     HistoryModule,
     BriefingModule,
     TrendsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

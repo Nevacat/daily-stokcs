@@ -111,6 +111,14 @@ export interface HistoryEntry {
   recommendations: Recommendation[];
 }
 
+/** 푸시 알림 디바이스 등록 (기획서 §3.2) */
+export interface DeviceRegistration {
+  /** FCM 디바이스 토큰 */
+  token: string;
+  platform: 'ios' | 'android';
+  registeredAt: string; // ISO 8601 UTC
+}
+
 /** 관심 종목/섹터 (기획서 §3.1) */
 export interface Favorites {
   tickers: string[];
