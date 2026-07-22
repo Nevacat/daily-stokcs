@@ -10,6 +10,8 @@ import {
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
 import { SECTOR_LABELS, SECTORS, STOCKS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { ErrorCard } from '../components/ErrorCard';
+import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -31,6 +33,7 @@ export function NewsScreen() {
   const [sector, setSector] = useState<Sector | null>(null);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   // 필터 변경 후 도착한 이전 요청 응답을 무시하기 위한 시퀀스 토큰
@@ -51,6 +54,8 @@ export function NewsScreen() {
     } catch (e) {
       if (seq !== requestSeq.current) return;
       setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했습니다.');
+    } finally {
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [sector, sentiment]);
 
@@ -118,11 +123,28 @@ export function NewsScreen() {
         onEndReached={() => void loadMore()}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={
-          <Card>
-            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-              {error ?? '표시할 뉴스가 없습니다. 홈에서 수집을 실행해보세요.'}
-            </Text>
-          </Card>
+          loading ? (
+            <View style={styles.skeletons}>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </View>
+          ) : error ? (
+            <ErrorCard
+              message={error}
+              onRetry={() => {
+                setLoading(true);
+                void load();
+              }}
+            />
+          ) : (
+            <Card>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                표시할 뉴스가 없습니다. 홈에서 수집을 실행해보세요.
+              </Text>
+            </Card>
+          )
         }
         ListFooterComponent={
           cursor ? (
@@ -181,4 +203,5 @@ export function NewsScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800' },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  skeletons: { gap: spacing.md },
 });

@@ -19,6 +19,8 @@ import type {
 import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
 import { BriefingCard } from '../components/BriefingCard';
+import { ErrorCard } from '../components/ErrorCard';
+import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -82,6 +84,7 @@ export function HomeScreen() {
   const [nextCollectAt, setNextCollectAt] = useState<string | undefined>();
   const [collecting, setCollecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
@@ -101,6 +104,8 @@ export function HomeScreen() {
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : '서버에 연결할 수 없습니다.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -214,11 +219,13 @@ export function HomeScreen() {
         </Card>
 
         {error && (
-          <Card>
-            <Text style={[styles.errorText, { color: colors.danger }]}>
-              {error}
-            </Text>
-          </Card>
+          <ErrorCard
+            message={error}
+            onRetry={() => {
+              setLoading(true);
+              void load();
+            }}
+          />
         )}
 
         {/* 관심 종목 추천 — 상단 고정 (기획서 §3.1) */}
@@ -265,7 +272,15 @@ export function HomeScreen() {
         </ScrollView>
 
         {/* 추천 카드 리스트 — 섹터 선택 시 해당 섹터가 비어도 안내 문구 표시 */}
-        {listRecs.length === 0 && (sector !== null || favoriteRecs.length === 0) ? (
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : listRecs.length === 0 &&
+          !error &&
+          (sector !== null || favoriteRecs.length === 0) ? (
           <Card>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {sector !== null

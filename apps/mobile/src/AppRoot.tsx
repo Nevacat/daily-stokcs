@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -19,6 +20,7 @@ import { HistoryScreen } from './screens/HistoryScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { NewsScreen } from './screens/NewsScreen';
+import { OnboardingScreen } from './screens/OnboardingScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
 type Tab = 'home' | 'news' | 'history' | 'settings';
@@ -30,18 +32,37 @@ const TABS: { key: Tab; label: string; Icon: typeof Home }[] = [
   { key: 'settings', label: '설정', Icon: Settings },
 ];
 
+const ONBOARDING_KEY = 'detok.onboarded';
+
 function Shell() {
   const { colors, scheme } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('home');
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
-  // 세션 복원 중 → 스플래시, 비로그인 → 로그인 화면
-  if (user === null) {
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDING_KEY)
+      .then(v => setOnboarded(v === '1'))
+      .catch(() => setOnboarded(true));
+  }, []);
+
+  // 세션 복원 중 → 스플래시, 첫 실행 → 온보딩, 비로그인 → 로그인 화면
+  if (user === null || onboarded === null) {
     return (
       <View style={[styles.splash, { backgroundColor: colors.backgroundSoft }]}>
         <ActivityIndicator color={colors.primary} />
       </View>
+    );
+  }
+  if (user === false && !onboarded) {
+    return (
+      <OnboardingScreen
+        onDone={() => {
+          setOnboarded(true);
+          AsyncStorage.setItem(ONBOARDING_KEY, '1').catch(() => {});
+        }}
+      />
     );
   }
   if (user === false) {
