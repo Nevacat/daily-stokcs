@@ -4,18 +4,20 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { Home, Newspaper, Settings } from 'lucide-react-native';
+import { History, Home, Newspaper, Settings } from 'lucide-react-native';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { spacing } from './theme/tokens';
+import { HistoryScreen } from './screens/HistoryScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { NewsScreen } from './screens/NewsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
-type Tab = 'home' | 'news' | 'settings';
+type Tab = 'home' | 'news' | 'history' | 'settings';
 
 const TABS: { key: Tab; label: string; Icon: typeof Home }[] = [
   { key: 'home', label: '홈', Icon: Home },
   { key: 'news', label: '뉴스', Icon: Newspaper },
+  { key: 'history', label: '히스토리', Icon: History },
   { key: 'settings', label: '설정', Icon: Settings },
 ];
 
@@ -33,6 +35,7 @@ function Shell() {
       <View style={{ flex: 1, paddingTop: insets.top }}>
         {tab === 'home' && <HomeScreen />}
         {tab === 'news' && <NewsScreen />}
+        {tab === 'history' && <HistoryScreen />}
         {tab === 'settings' && <SettingsScreen />}
       </View>
 

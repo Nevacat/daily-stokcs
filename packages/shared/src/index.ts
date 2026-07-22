@@ -63,6 +63,14 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 날짜별 추천 스냅샷 (기획서 §3.3 — 해당 날짜의 마지막 추천 결과) */
+export interface HistoryEntry {
+  /** KST 기준 YYYY-MM-DD */
+  date: string;
+  generatedAt: string; // ISO 8601 UTC
+  recommendations: Recommendation[];
+}
+
 /** 관심 종목/섹터 (기획서 §3.1) */
 export interface Favorites {
   tickers: string[];
