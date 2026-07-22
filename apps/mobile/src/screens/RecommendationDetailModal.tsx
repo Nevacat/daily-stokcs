@@ -3,11 +3,12 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { ExternalLink, X } from 'lucide-react-native';
+import { ExternalLink, Share2, X } from 'lucide-react-native';
 import type {
   NewsItem,
   Recommendation,
@@ -55,6 +56,28 @@ export function RecommendationDetailModal({
       );
   }, [recommendationId]);
 
+  /** 추천 카드 공유 (기획서 §3.6) — 종목·이유·근거 뉴스 + 면책 문구 */
+  const onShare = async () => {
+    if (!recommendation) return;
+    const evidenceLines = evidence
+      .slice(0, 2)
+      .map(n => `- ${n.title}\n  ${n.url}`)
+      .join('\n');
+    const message = [
+      `[DeTok] ${recommendation.stockName} (${recommendation.ticker}) — 종합 ${recommendation.score}점`,
+      recommendation.reason,
+      evidenceLines ? `근거 뉴스\n${evidenceLines}` : null,
+      '※ 본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+    try {
+      await Share.share({ message });
+    } catch {
+      // 사용자가 공유 시트를 닫은 경우 등 — 무시
+    }
+  };
+
   return (
     <Modal
       visible={recommendationId !== null}
@@ -67,9 +90,16 @@ export function RecommendationDetailModal({
           <Text style={{ color: colors.textPrimary, fontSize: 17, fontWeight: '700' }}>
             추천 상세
           </Text>
-          <Pressable onPress={onClose} hitSlop={12}>
-            <X size={22} color={colors.textSecondary} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            {recommendation && (
+              <Pressable onPress={() => void onShare()} hitSlop={12}>
+                <Share2 size={20} color={colors.textSecondary} />
+              </Pressable>
+            )}
+            <Pressable onPress={onClose} hitSlop={12}>
+              <X size={22} color={colors.textSecondary} />
+            </Pressable>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg }}>
@@ -154,6 +184,11 @@ export function RecommendationDetailModal({
 }
 
 const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
