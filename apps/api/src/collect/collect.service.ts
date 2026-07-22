@@ -10,6 +10,7 @@ import type { CollectRun, NewsItem } from '@daily-stocks/shared';
 import { JsonStore } from '../common/json-store';
 import { HistoryService } from '../history/history.service';
 import { NewsService } from '../news/news.service';
+import { PriceService } from '../price/price.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { SettingsService } from '../settings/settings.service';
 import { AnalyzerService } from './analyzer/analyzer.service';
@@ -36,6 +37,7 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
     private readonly recommendationService: RecommendationService,
     private readonly settingsService: SettingsService,
     private readonly historyService: HistoryService,
+    private readonly priceService: PriceService,
   ) {}
 
   onModuleInit(): void {
@@ -113,7 +115,16 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       const recommendations = this.recommendationService.regenerate(
         this.newsService.findAll(),
       );
-      this.historyService.record(recommendations); // 날짜별 스냅샷 (기획서 §3.3)
+      // 추천 시점 주가 기록 — 주가 API 키 미설정이면 null (적중률 비활성)
+      const prices = await this.priceService.getPrices(
+        recommendations.map((r) => r.ticker),
+      );
+      this.historyService.record(
+        recommendations.map((r) => ({
+          ...r,
+          priceAtRecommendation: prices.get(r.ticker) ?? null,
+        })),
+      ); // 날짜별 스냅샷 (기획서 §3.3)
 
       run.status = 'done';
       run.newsCount = added.length;

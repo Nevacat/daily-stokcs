@@ -103,7 +103,24 @@ export function HistoryScreen() {
                       {SECTOR_LABELS[rec.sector]}
                     </Text>
                   </View>
-                  <ScorePill score={rec.score} />
+                  <View style={styles.recRight}>
+                    {/* 등락률 — 주가 API 키(KIS) 설정 시에만 내려옴 */}
+                    {rec.changePct != null && (
+                      <Text
+                        style={[
+                          styles.changePct,
+                          {
+                            color:
+                              rec.changePct >= 0 ? colors.success : colors.danger,
+                          },
+                        ]}
+                      >
+                        {rec.changePct >= 0 ? '+' : ''}
+                        {rec.changePct}%
+                      </Text>
+                    )}
+                    <ScorePill score={rec.score} />
+                  </View>
                 </View>
               ))}
             </Card>
@@ -112,7 +129,8 @@ export function HistoryScreen() {
       )}
 
       <Text style={[styles.note, { color: colors.textDisabled }]}>
-        추천 시점 대비 주가 등락(적중률)은 주가 데이터 연동 후 제공될 예정입니다.
+        추천 시점 대비 등락률은 서버에 주가 API 키(apps/api/.env의 KIS_APP_KEY)를
+        설정하면 표시됩니다.
       </Text>
     </ScrollView>
   );
@@ -138,6 +156,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   recInfo: { gap: 2 },
+  recRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  changePct: { fontSize: 13, fontWeight: '700' },
   stockName: { fontSize: 15, fontWeight: '600' },
   sectorText: { fontSize: 12, fontWeight: '600' },
   errorText: { fontSize: 13 },

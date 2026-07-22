@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HistoryModule } from '../history/history.module';
 import { NewsModule } from '../news/news.module';
+import { PriceModule } from '../price/price.module';
 import { RecommendationModule } from '../recommendation/recommendation.module';
 import { SettingsModule } from '../settings/settings.module';
 import { AnalyzerService } from './analyzer/analyzer.service';
@@ -9,7 +10,13 @@ import { CollectService } from './collect.service';
 import { RssCollectorService } from './rss-collector.service';
 
 @Module({
-  imports: [NewsModule, RecommendationModule, SettingsModule, HistoryModule],
+  imports: [
+    NewsModule,
+    RecommendationModule,
+    SettingsModule,
+    HistoryModule,
+    PriceModule,
+  ],
   controllers: [CollectController],
   providers: [CollectService, RssCollectorService, AnalyzerService],
 })

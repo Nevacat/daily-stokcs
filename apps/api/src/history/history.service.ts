@@ -42,4 +42,26 @@ export class HistoryService {
     const requested = Number.isFinite(limit) ? Math.floor(limit) : 14;
     return this.entries.slice(0, Math.min(Math.max(requested, 1), MAX_DAYS));
   }
+
+  /**
+   * 적중률 계산 (기획서 §3.3): 추천 시점 가격과 현재가가 모두 있으면 등락률(%)을 붙인다.
+   * 주가 API 키 미설정이면 가격이 null이라 그대로 통과된다.
+   */
+  static applyPerformance(
+    entries: HistoryEntry[],
+    currentPrices: Map<string, number | null>,
+  ): HistoryEntry[] {
+    return entries.map((entry) => ({
+      ...entry,
+      recommendations: entry.recommendations.map((rec) => {
+        const atRec = rec.priceAtRecommendation ?? null;
+        const current = currentPrices.get(rec.ticker) ?? null;
+        const changePct =
+          atRec !== null && current !== null && atRec > 0
+            ? Math.round(((current - atRec) / atRec) * 10000) / 100
+            : null;
+        return { ...rec, currentPrice: current, changePct };
+      }),
+    }));
+  }
 }
