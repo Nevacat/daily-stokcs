@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { CollectRun, NewsItem } from '@daily-stocks/shared';
+import { JsonStore } from '../common/json-store';
 import { HistoryService } from '../history/history.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
@@ -24,7 +25,8 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CollectService.name);
   private timer?: NodeJS.Timeout;
   private nextCollectAt?: string;
-  private lastRun?: CollectRun;
+  private readonly runStore = new JsonStore<CollectRun>('last-run');
+  private lastRun?: CollectRun = this.runStore.load() ?? undefined;
   private running = false;
 
   constructor(
@@ -116,11 +118,13 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       run.status = 'done';
       run.newsCount = added.length;
       run.finishedAt = new Date().toISOString();
+      this.runStore.save(run); // 재시작 후에도 마지막 수집 정보 유지
       this.logger.log(`수집 완료(${trigger}): 신규 뉴스 ${added.length}건`);
       return run;
     } catch (e) {
       run.status = 'failed';
       run.finishedAt = new Date().toISOString();
+      this.runStore.save(run);
       throw e;
     } finally {
       this.running = false;

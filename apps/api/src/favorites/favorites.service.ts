@@ -16,6 +16,24 @@ export class FavoritesService {
   }
 
   update(input: Partial<Favorites>): Favorites {
+    // body 타입 방어: 배열이 아니거나 문자열이 아닌 요소가 있으면 400
+    for (const [field, value] of [
+      ['tickers', input.tickers],
+      ['sectors', input.sectors],
+    ] as const) {
+      if (
+        value !== undefined &&
+        (!Array.isArray(value) || value.some((v) => typeof v !== 'string'))
+      ) {
+        throw new BadRequestException({
+          error: {
+            code: 'INVALID_BODY',
+            message: `${field}는 문자열 배열이어야 합니다.`,
+          },
+        });
+      }
+    }
+
     const tickers = [...new Set(input.tickers ?? this.favorites.tickers)];
     const sectors = [...new Set(input.sectors ?? this.favorites.sectors)];
 

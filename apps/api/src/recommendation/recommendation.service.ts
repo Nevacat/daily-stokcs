@@ -44,7 +44,10 @@ export class RecommendationService {
       }
 
       const score = Math.round(50 + 50 * Math.tanh(raw / 3));
-      if (score < MIN_SCORE || positive === 0) continue;
+      // 잘못된 publishedAt로 NaN이 전파되면 추천에서 제외
+      if (!Number.isFinite(score) || score < MIN_SCORE || positive === 0) {
+        continue;
+      }
 
       // 근거 뉴스: 비중립 우선, 최대 5건 (상세 화면에서 감성 태그와 함께 노출)
       const evidence = [...related]
@@ -57,7 +60,8 @@ export class RecommendationService {
         .map((n) => n.id);
 
       next.push({
-        id: `${stock.ticker}-${now.getTime()}`,
+        // 티커를 id로 사용 — 재생성돼도 상세 링크가 깨지지 않는다
+        id: stock.ticker,
         ticker: stock.ticker,
         stockName: stock.name,
         sector: stock.sector,
