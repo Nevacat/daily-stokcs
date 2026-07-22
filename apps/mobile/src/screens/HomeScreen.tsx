@@ -12,10 +12,11 @@ import { RefreshCw, Star } from 'lucide-react-native';
 import type {
   CollectRun,
   DailyBriefing,
+  Market,
   Recommendation,
   Sector,
 } from '@daily-stocks/shared';
-import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
+import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
 import { BriefingCard } from '../components/BriefingCard';
 import { Button, Card, Chip, ScorePill } from '../components/ui';
@@ -76,6 +77,7 @@ export function HomeScreen() {
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [favoriteTickers, setFavoriteTickers] = useState<string[]>([]);
   const [sector, setSector] = useState<Sector | null>(null);
+  const [market, setMarket] = useState<Market | null>(null);
   const [lastRun, setLastRun] = useState<CollectRun | undefined>();
   const [nextCollectAt, setNextCollectAt] = useState<string | undefined>();
   const [collecting, setCollecting] = useState(false);
@@ -138,11 +140,13 @@ export function HomeScreen() {
     }
   };
 
-  const favoriteRecs = recommendations.filter(r =>
-    favoriteTickers.includes(r.ticker),
+  // 시장 필터 — 구버전 데이터는 market이 없을 수 있어 KR로 간주
+  const byMarket = recommendations.filter(
+    r => market === null || (r.market ?? 'KR') === market,
   );
+  const favoriteRecs = byMarket.filter(r => favoriteTickers.includes(r.ticker));
   const listRecs = (
-    sector ? recommendations.filter(r => r.sector === sector) : recommendations
+    sector ? byMarket.filter(r => r.sector === sector) : byMarket
   ).filter(r => sector !== null || !favoriteTickers.includes(r.ticker));
 
   const renderCard = (rec: Recommendation) => (
@@ -230,6 +234,19 @@ export function HomeScreen() {
           </View>
         )}
 
+        {/* 시장 필터 (국내/미국) */}
+        <View style={styles.marketRow}>
+          <Chip label="전체 시장" active={market === null} onPress={() => setMarket(null)} />
+          {(['KR', 'US'] as const).map(m => (
+            <Chip
+              key={m}
+              label={MARKET_LABELS[m]}
+              active={market === m}
+              onPress={() => setMarket(market === m ? null : m)}
+            />
+          ))}
+        </View>
+
         {/* 섹터 탭 (기획서 §2.2) */}
         <ScrollView
           horizontal
@@ -305,5 +322,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 15, fontWeight: '700' },
   chipRow: { gap: spacing.sm },
+  marketRow: { flexDirection: 'row', gap: spacing.sm },
   disclaimer: { fontSize: 11, textAlign: 'center', marginTop: spacing.md },
 });

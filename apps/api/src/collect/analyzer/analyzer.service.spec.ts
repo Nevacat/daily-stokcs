@@ -32,6 +32,33 @@ describe('AnalyzerService', () => {
     expect(result.polarity).toBe(0);
   });
 
+  it('영문 뉴스: 종목 별칭·감성 키워드를 대소문자 무시로 매칭한다', () => {
+    const result = analyzer.analyze(
+      'Nvidia shares surge after strong earnings',
+    );
+    expect(result.stocks.map((s) => s.ticker)).toContain('NVDA');
+    expect(result.stocks[0].market).toBe('US');
+    expect(result.sentiment).toBe('positive');
+  });
+
+  it('영문 뉴스: 악재 키워드 → negative, 섹터 키워드 매칭', () => {
+    const result = analyzer.analyze('Tesla faces lawsuit as EV sales tumbles');
+    expect(result.stocks.map((s) => s.ticker)).toContain('TSLA');
+    expect(result.sectors).toContain('automotive');
+    expect(result.sentiment).toBe('negative');
+  });
+
+  it('짧은 영문 별칭(GM)은 단어 경계로만 매칭한다 (segment 오탐 방지)', () => {
+    expect(
+      analyzer.analyze('Market segment analysis for chips').stocks,
+    ).toHaveLength(0);
+    expect(
+      analyzer
+        .analyze('GM announces new EV lineup')
+        .stocks.map((s) => s.ticker),
+    ).toContain('GM');
+  });
+
   it('아무 키워드도 없으면 neutral, 섹터·종목 없음', () => {
     const result = analyzer.analyze('오늘의 날씨');
     expect(result).toEqual({

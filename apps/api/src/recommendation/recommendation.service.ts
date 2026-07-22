@@ -75,6 +75,7 @@ export class RecommendationService {
         ),
         newsIds: evidence,
         recommendedAt: now.toISOString(),
+        market: stock.market,
       });
     }
 

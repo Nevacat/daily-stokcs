@@ -3,7 +3,7 @@ import type { Sector } from '@daily-stocks/shared';
 // 종목 사전은 앱에서도 쓰므로 shared로 이동 — 여기서 재수출
 export { STOCKS, type StockEntry } from '@daily-stocks/shared';
 
-/** 종목 매칭 없이 섹터만 유추할 때 쓰는 키워드 */
+/** 종목 매칭 없이 섹터만 유추할 때 쓰는 키워드 (한·영) */
 export const SECTOR_KEYWORDS: Record<Sector, string[]> = {
   semiconductor_ai: [
     '반도체',
@@ -14,12 +14,61 @@ export const SECTOR_KEYWORDS: Record<Sector, string[]> = {
     'GPU',
     'D램',
     '낸드',
+    'chip',
+    'semiconductor',
+    'artificial intelligence',
+    'datacenter',
   ],
-  battery: ['2차전지', '이차전지', '배터리', '양극재', '전고체'],
-  bio_healthcare: ['바이오', '신약', '임상', '제약', 'FDA'],
-  automotive: ['전기차', '자동차', '완성차', '자율주행'],
-  finance: ['은행', '금융지주', '증권', '보험', '금리'],
-  entertainment: ['엔터', 'K팝', '아이돌', '콘텐츠', '드라마', '웹툰'],
+  battery: [
+    '2차전지',
+    '이차전지',
+    '배터리',
+    '양극재',
+    '전고체',
+    'battery',
+    'lithium',
+  ],
+  bio_healthcare: [
+    '바이오',
+    '신약',
+    '임상',
+    '제약',
+    'FDA',
+    'biotech',
+    'pharma',
+    'clinical trial',
+  ],
+  automotive: [
+    '전기차',
+    '자동차',
+    '완성차',
+    '자율주행',
+    'EV',
+    'electric vehicle',
+    'automaker',
+    'autonomous',
+  ],
+  finance: [
+    '은행',
+    '금융지주',
+    '증권',
+    '보험',
+    '금리',
+    'bank',
+    'interest rate',
+    'Fed',
+  ],
+  entertainment: [
+    '엔터',
+    'K팝',
+    '아이돌',
+    '콘텐츠',
+    '드라마',
+    '웹툰',
+    'streaming',
+    'box office',
+    'K-pop',
+  ],
   defense_shipbuilding: [
     '방산',
     '방위산업',
@@ -27,12 +76,28 @@ export const SECTOR_KEYWORDS: Record<Sector, string[]> = {
     '수주잔고',
     '함정',
     '미사일',
+    'defense',
+    'military',
+    'missile',
+    'shipbuilding',
   ],
-  energy_chemical: ['정유', '석유화학', '에너지', '원유', '수소', '태양광'],
+  energy_chemical: [
+    '정유',
+    '석유화학',
+    '에너지',
+    '원유',
+    '수소',
+    '태양광',
+    'oil',
+    'crude',
+    'hydrogen',
+    'solar',
+  ],
 };
 
-/** 호재 키워드 (제목 기준 감성 판단용) */
+/** 호재 키워드 (제목 기준 감성 판단용, 한·영) */
 export const POSITIVE_KEYWORDS = [
+  // 한국어
   '수주',
   '호실적',
   '최대 실적',
@@ -57,10 +122,28 @@ export const POSITIVE_KEYWORDS = [
   '점유율 확대',
   '기대감',
   '수혜',
+  // 영문 (미장 뉴스)
+  'surge',
+  'soar',
+  'rally',
+  'record high',
+  'beats estimates',
+  'beats expectations',
+  'upgrade',
+  'jumps',
+  'gains',
+  'profit rises',
+  'strong earnings',
+  'approval',
+  'wins contract',
+  'breakthrough',
+  'outperform',
+  'raises guidance',
 ];
 
-/** 악재 키워드 */
+/** 악재 키워드 (한·영) */
 export const NEGATIVE_KEYWORDS = [
+  // 한국어
   '적자',
   '적자전환',
   '급락',
@@ -85,4 +168,22 @@ export const NEGATIVE_KEYWORDS = [
   '조사 착수',
   '횡령',
   '결함',
+  // 영문 (미장 뉴스)
+  'plunge',
+  'slump',
+  'tumbles',
+  'misses estimates',
+  'downgrade',
+  'lawsuit',
+  'recall',
+  'layoffs',
+  'falls',
+  'drops',
+  'probe',
+  'investigation',
+  'fine',
+  'strike',
+  'bankruptcy',
+  'cuts guidance',
+  'record low',
 ];

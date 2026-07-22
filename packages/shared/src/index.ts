@@ -25,6 +25,14 @@ export const SECTOR_LABELS: Record<Sector, string> = {
   energy_chemical: '에너지/화학',
 };
 
+/** 시장 구분: 국내(KRX) / 미국 */
+export type Market = 'KR' | 'US';
+
+export const MARKET_LABELS: Record<Market, string> = {
+  KR: '국내',
+  US: '미국',
+};
+
 export type Sentiment = 'positive' | 'negative' | 'neutral';
 
 export interface NewsItem {
@@ -50,6 +58,8 @@ export interface Recommendation {
   /** 근거 뉴스 id 목록 */
   newsIds: string[];
   recommendedAt: string; // ISO 8601 UTC
+  /** 시장 구분 — 구버전 데이터엔 없을 수 있음(없으면 KR로 간주) */
+  market?: Market;
   /** 추천 시점 주가 — 주가 API 키(KIS) 설정 시 채워짐 (기획서 §3.3 적중률) */
   priceAtRecommendation?: number | null;
   /** 조회 시점 현재가 — 히스토리 조회 시 계산 */
@@ -71,7 +81,7 @@ export interface CollectRun {
 
 /** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
 export interface StockDetail {
-  stock: { ticker: string; name: string; sector: Sector };
+  stock: { ticker: string; name: string; sector: Sector; market: Market };
   /** 현재 추천 중이 아니면 null */
   recommendation: Recommendation | null;
   trend: SentimentTrend;
