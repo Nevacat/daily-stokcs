@@ -8,9 +8,14 @@ import {
   View,
 } from 'react-native';
 import { ExternalLink, X } from 'lucide-react-native';
-import type { NewsItem, Recommendation } from '@daily-stocks/shared';
+import type {
+  NewsItem,
+  Recommendation,
+  SentimentTrend,
+} from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { TrendChart } from '../components/TrendChart';
 import { Card, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
@@ -26,17 +31,24 @@ export function RecommendationDetailModal({
   const { colors } = useTheme();
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [evidence, setEvidence] = useState<NewsItem[]>([]);
+  const [trend, setTrend] = useState<SentimentTrend | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!recommendationId) return;
     setRecommendation(null);
+    setTrend(null);
     setError(null);
     api
       .recommendationDetail(recommendationId)
       .then(res => {
         setRecommendation(res.data.recommendation);
         setEvidence(res.data.evidence);
+        // 트렌드는 부가 정보 — 실패해도 상세는 그대로 보여준다
+        api
+          .tickerTrend(res.data.recommendation.ticker)
+          .then(t => setTrend(t.data))
+          .catch(() => {});
       })
       .catch(e =>
         setError(e instanceof Error ? e.message : '상세를 불러오지 못했습니다.'),
@@ -92,6 +104,17 @@ export function RecommendationDetailModal({
                   </Text>
                 </Card>
               </View>
+
+              {trend && (
+                <View style={{ gap: spacing.sm }}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                    최근 7일 감성 트렌드
+                  </Text>
+                  <Card>
+                    <TrendChart trend={trend} />
+                  </Card>
+                </View>
+              )}
 
               <View style={{ gap: spacing.sm }}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>

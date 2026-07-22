@@ -10,6 +10,7 @@ import type {
   Recommendation,
   Sector,
   Sentiment,
+  SentimentTrend,
 } from '@daily-stocks/shared';
 
 /** 개발용 로컬 API (Android 에뮬레이터는 10.0.2.2가 호스트) */
@@ -80,6 +81,11 @@ export const api = {
   },
 
   briefing: () => request<ApiResponse<DailyBriefing>>('/briefing'),
+
+  tickerTrend: (ticker: string) =>
+    request<ApiResponse<SentimentTrend>>(
+      `/trends?ticker=${encodeURIComponent(ticker)}`,
+    ),
 
   history: (limit = 14) =>
     request<ApiResponse<HistoryEntry[]>>(`/history?limit=${limit}`),
