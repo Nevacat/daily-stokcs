@@ -63,6 +63,14 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 자동 수집 주기 옵션(분). null = 자동 수집 끄기 (기획서 §2.1) */
+export const ALLOWED_INTERVALS = [30, 60, 180, 360, 1440] as const;
+
+export interface CollectSettings {
+  /** 30 | 60 | 180 | 360 | 1440 | null(끄기) */
+  intervalMinutes: (typeof ALLOWED_INTERVALS)[number] | null;
+}
+
 /** 공통 API 응답 포맷 (rules/api-design.md) */
 export interface ApiResponse<T> {
   data: T;
