@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   CollectRun,
   CollectSettings,
+  Favorites,
   NewsItem,
   Recommendation,
   Sector,
@@ -49,6 +50,14 @@ export const api = {
     const qs = query.toString();
     return request<ApiResponse<NewsItem[]>>(`/news${qs ? `?${qs}` : ''}`);
   },
+
+  favorites: () => request<ApiResponse<Favorites>>('/favorites'),
+
+  toggleFavorite: (ticker: string) =>
+    request<ApiResponse<Favorites>>(
+      `/favorites/tickers/${encodeURIComponent(ticker)}/toggle`,
+      { method: 'POST' },
+    ),
 
   settings: () => request<ApiResponse<CollectSettings>>('/settings'),
 
