@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { HistoryService } from '../history/history.service';
+import { PriceService } from '../price/price.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { SettingsService } from '../settings/settings.service';
@@ -29,6 +30,7 @@ describe('CollectService 스케줄러', () => {
       new RecommendationService(),
       settings,
       new HistoryService(),
+      new PriceService(),
     );
     service.onModuleInit();
   });

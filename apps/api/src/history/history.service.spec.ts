@@ -72,4 +72,30 @@ describe('HistoryService', () => {
     service.record([rec('005930')], new Date('2026-07-22T05:00:00Z'));
     expect(new HistoryService().list()).toHaveLength(1);
   });
+
+  describe('applyPerformance (적중률)', () => {
+    const entry = (priceAtRecommendation: number | null) => ({
+      date: '2026-07-22',
+      generatedAt: '2026-07-22T05:00:00Z',
+      recommendations: [{ ...rec('005930'), priceAtRecommendation }],
+    });
+
+    it('두 가격이 모두 있으면 등락률(%)을 계산한다', () => {
+      const [result] = HistoryService.applyPerformance(
+        [entry(70000)],
+        new Map([['005930', 77000]]),
+      );
+      expect(result.recommendations[0].changePct).toBe(10);
+      expect(result.recommendations[0].currentPrice).toBe(77000);
+    });
+
+    it('가격이 없으면(주가 키 미설정) changePct는 null', () => {
+      const [result] = HistoryService.applyPerformance(
+        [entry(null)],
+        new Map([['005930', null]]),
+      );
+      expect(result.recommendations[0].changePct).toBeNull();
+      expect(result.recommendations[0].currentPrice).toBeNull();
+    });
+  });
 });

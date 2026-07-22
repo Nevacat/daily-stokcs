@@ -50,6 +50,12 @@ export interface Recommendation {
   /** 근거 뉴스 id 목록 */
   newsIds: string[];
   recommendedAt: string; // ISO 8601 UTC
+  /** 추천 시점 주가 — 주가 API 키(KIS) 설정 시 채워짐 (기획서 §3.3 적중률) */
+  priceAtRecommendation?: number | null;
+  /** 조회 시점 현재가 — 히스토리 조회 시 계산 */
+  currentPrice?: number | null;
+  /** 추천 시점 대비 등락률(%) — 두 가격이 모두 있을 때만 */
+  changePct?: number | null;
 }
 
 export type CollectStatus = 'idle' | 'collecting' | 'analyzing' | 'done' | 'failed';
