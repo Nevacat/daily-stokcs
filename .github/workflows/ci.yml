@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  api:
+    name: API (build · lint · test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @daily-stocks/shared
+      - run: npm run api:build
+      - run: npm run lint -w api
+      - run: npm run api:test
+
+  mobile:
+    name: Mobile (typecheck · lint · test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @daily-stocks/shared
+      - run: npx tsc --noEmit -p apps/mobile
+      - run: npm run lint -w mobile
+      - run: npm run test -w mobile
