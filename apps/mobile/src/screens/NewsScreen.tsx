@@ -1,11 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
-import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
+import { SECTOR_LABELS, SECTORS, STOCKS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
+import { StockDetailModal } from './StockDetailModal';
+
+const STOCK_NAMES = new Map(STOCKS.map(s => [s.ticker, s.name]));
 
 const SENTIMENT_FILTERS: { value: Sentiment; label: string }[] = [
   { value: 'positive', label: '호재' },
@@ -22,6 +32,7 @@ export function NewsScreen() {
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   // 필터 변경 후 도착한 이전 요청 응답을 무시하기 위한 시퀀스 토큰
   const requestSeq = useRef(0);
 
@@ -132,6 +143,20 @@ export function NewsScreen() {
                   #{SECTOR_LABELS[s]}
                 </Text>
               ))}
+              {/* 종목 태그 — 탭하면 종목 상세로 이동 */}
+              {item.tickers.slice(0, 2).map(ticker => (
+                <Pressable
+                  key={ticker}
+                  onPress={() => setSelectedTicker(ticker)}
+                  hitSlop={6}
+                >
+                  <Text
+                    style={{ color: colors.primary, fontSize: 11, fontWeight: '700' }}
+                  >
+                    ${STOCK_NAMES.get(ticker) ?? ticker}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
             <Text
               style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', lineHeight: 20 }}
@@ -143,6 +168,11 @@ export function NewsScreen() {
             </Text>
           </Card>
         )}
+      />
+
+      <StockDetailModal
+        ticker={selectedTicker}
+        onClose={() => setSelectedTicker(null)}
       />
     </View>
   );
