@@ -14,6 +14,9 @@ CLAUDE.local.md
 .claude/settings.local.json
 .claude/agent-memory/
 
+# API 로컬 데이터 (MVP JSON 저장소)
+apps/api/data/
+
 # React Native
 apps/mobile/ios/Pods/
 apps/mobile/ios/build/
