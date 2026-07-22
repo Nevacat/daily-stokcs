@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   CollectRun,
   CollectSettings,
+  DailyBriefing,
   Favorites,
   HistoryEntry,
   NewsItem,
@@ -77,6 +78,8 @@ export const api = {
     const qs = query.toString();
     return request<ApiResponse<NewsItem[]>>(`/news${qs ? `?${qs}` : ''}`);
   },
+
+  briefing: () => request<ApiResponse<DailyBriefing>>('/briefing'),
 
   history: (limit = 14) =>
     request<ApiResponse<HistoryEntry[]>>(`/history?limit=${limit}`),

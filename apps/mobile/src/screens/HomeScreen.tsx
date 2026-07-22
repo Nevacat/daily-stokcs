@@ -9,9 +9,15 @@ import {
   View,
 } from 'react-native';
 import { RefreshCw, Star } from 'lucide-react-native';
-import type { CollectRun, Recommendation, Sector } from '@daily-stocks/shared';
+import type {
+  CollectRun,
+  DailyBriefing,
+  Recommendation,
+  Sector,
+} from '@daily-stocks/shared';
 import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
+import { BriefingCard } from '../components/BriefingCard';
 import { Button, Card, Chip, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -67,6 +73,7 @@ function RecommendationCard({
 export function HomeScreen() {
   const { colors } = useTheme();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [favoriteTickers, setFavoriteTickers] = useState<string[]>([]);
   const [sector, setSector] = useState<Sector | null>(null);
   const [lastRun, setLastRun] = useState<CollectRun | undefined>();
@@ -78,15 +85,17 @@ export function HomeScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [recs, status, favorites] = await Promise.all([
+      const [recs, status, favorites, brief] = await Promise.all([
         api.recommendations(),
         api.collectStatus(),
         api.favorites(),
+        api.briefing(),
       ]);
       setRecommendations(recs.data);
       setLastRun(status.data.lastRun);
       setNextCollectAt(status.meta?.nextCollectAt);
       setFavoriteTickers(favorites.data.tickers);
+      setBriefing(brief.data);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : '서버에 연결할 수 없습니다.');
@@ -174,6 +183,11 @@ export function HomeScreen() {
             </Text>
           </View>
         </View>
+
+        {/* 데일리 브리핑 (기획서 §3.4) */}
+        {briefing && briefing.marketSummary.total > 0 && (
+          <BriefingCard briefing={briefing} onPressPick={setDetailId} />
+        )}
 
         {/* 수집 상태 카드 (기획서 §2.1) */}
         <Card>
