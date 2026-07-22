@@ -37,7 +37,8 @@ export class NewsService {
     const titles = new Set(this.items.map((n) => this.normalizeTitle(n.title)));
 
     const added: NewsItem[] = [];
-    for (const item of candidates) {
+    // 보존 기간이 지난 후보는 애초에 신규로 집계하지 않는다
+    for (const item of this.prune(candidates, now)) {
       const normalized = this.normalizeTitle(item.title);
       if (urls.has(item.url) || titles.has(normalized)) continue;
       urls.add(item.url);
@@ -45,8 +46,10 @@ export class NewsService {
       added.push(item);
     }
 
-    if (added.length > 0) {
-      this.items = this.prune([...this.items, ...added], now).sort(
+    // 신규가 없어도 기존 항목의 보존 기간 만료는 항상 반영한다
+    const pruned = this.prune(this.items, now);
+    if (added.length > 0 || pruned.length !== this.items.length) {
+      this.items = [...pruned, ...added].sort(
         (a, b) =>
           b.publishedAt.localeCompare(a.publishedAt) ||
           b.id.localeCompare(a.id),

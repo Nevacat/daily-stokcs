@@ -39,7 +39,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof res === 'object' &&
         res !== null &&
         'error' in res &&
-        typeof res.error === 'object'
+        typeof res.error === 'object' &&
+        res.error !== null
       ) {
         body = res as ApiError;
       } else {

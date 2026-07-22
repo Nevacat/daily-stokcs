@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
@@ -28,12 +29,14 @@ const ThemeContext = createContext<ThemeValue | null>(null);
 export function ThemeProvider({ children }: PropsWithChildren) {
   const systemScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('system');
+  // 사용자가 이미 테마를 고른 뒤에는 늦게 도착한 복원값이 덮어쓰지 않도록
+  const userChosen = useRef(false);
 
   // 저장된 테마 모드 복원 (앱 재시작 후에도 유지)
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then(saved => {
-        if (saved && MODES.includes(saved as ThemeMode)) {
+        if (!userChosen.current && saved && MODES.includes(saved as ThemeMode)) {
           setModeState(saved as ThemeMode);
         }
       })
@@ -46,6 +49,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     const scheme =
       mode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : mode;
     const setMode = (next: ThemeMode) => {
+      userChosen.current = true;
       setModeState(next);
       AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {
         // 저장 실패해도 현재 세션 동작에는 영향 없음
