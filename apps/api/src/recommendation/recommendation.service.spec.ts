@@ -38,6 +38,7 @@ describe('RecommendationService', () => {
     const items = [news('005930', 'positive'), news('005930', 'positive')];
     const [rec] = service.regenerate(items, NOW);
     expect(rec.ticker).toBe('005930');
+    expect(rec.id).toBe('005930'); // 재생성돼도 안정적인 id
     expect(rec.score).toBeGreaterThanOrEqual(55);
     expect(rec.reason).toContain('긍정 뉴스 2건');
     expect(rec.newsIds).toHaveLength(2);

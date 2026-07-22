@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
 import { JsonStore } from '../common/json-store';
+
+/** 뉴스 보존 기간. 반감기(24h) 특성상 이후에는 점수 기여가 사실상 0이다 */
+const RETENTION_DAYS = 7;
 
 export interface NewsQuery {
   sector?: Sector;
@@ -20,8 +23,16 @@ export class NewsService {
     return title.replace(/\s+/g, '').replace(/[^\p{L}\p{N}]/gu, '');
   }
 
+  /** 보존 기간이 지난 뉴스 제거 (무한 누적 방지) */
+  private prune(items: NewsItem[], now: Date): NewsItem[] {
+    const cutoff = new Date(
+      now.getTime() - RETENTION_DAYS * 24 * 3_600_000,
+    ).toISOString();
+    return items.filter((n) => n.publishedAt >= cutoff);
+  }
+
   /** 새 뉴스만 추가하고, 추가된 목록을 반환 */
-  upsert(candidates: NewsItem[]): NewsItem[] {
+  upsert(candidates: NewsItem[], now: Date = new Date()): NewsItem[] {
     const urls = new Set(this.items.map((n) => n.url));
     const titles = new Set(this.items.map((n) => this.normalizeTitle(n.title)));
 
@@ -35,7 +46,7 @@ export class NewsService {
     }
 
     if (added.length > 0) {
-      this.items = [...this.items, ...added].sort(
+      this.items = this.prune([...this.items, ...added], now).sort(
         (a, b) =>
           b.publishedAt.localeCompare(a.publishedAt) ||
           b.id.localeCompare(a.id),
@@ -62,9 +73,16 @@ export class NewsService {
     if (q.sentiment) list = list.filter((n) => n.sentiment === q.sentiment);
 
     if (q.cursor) {
-      const [publishedAt, id] = Buffer.from(q.cursor, 'base64url')
-        .toString()
-        .split('|');
+      const decoded = Buffer.from(q.cursor, 'base64url').toString();
+      const [publishedAt, id] = decoded.split('|');
+      if (!publishedAt || !id || Number.isNaN(Date.parse(publishedAt))) {
+        throw new BadRequestException({
+          error: {
+            code: 'INVALID_CURSOR',
+            message: '유효하지 않은 커서입니다.',
+          },
+        });
+      }
       list = list.filter(
         (n) =>
           n.publishedAt < publishedAt ||
@@ -72,7 +90,9 @@ export class NewsService {
       );
     }
 
-    const limit = Math.min(q.limit ?? 20, 100);
+    // NaN·음수·소수 방어: 1~100으로 정규화 (기본 20)
+    const requested = Number.isFinite(q.limit) ? Math.floor(q.limit!) : 20;
+    const limit = Math.min(Math.max(requested, 1), 100);
     const items = list.slice(0, limit);
     const last = items[items.length - 1];
     const nextCursor =

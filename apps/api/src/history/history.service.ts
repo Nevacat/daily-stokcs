@@ -38,6 +38,8 @@ export class HistoryService {
   }
 
   list(limit = 14): HistoryEntry[] {
-    return this.entries.slice(0, Math.min(limit, MAX_DAYS));
+    // NaN·음수 방어: 1~MAX_DAYS로 정규화
+    const requested = Number.isFinite(limit) ? Math.floor(limit) : 14;
+    return this.entries.slice(0, Math.min(Math.max(requested, 1), MAX_DAYS));
   }
 }

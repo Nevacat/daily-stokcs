@@ -26,6 +26,15 @@ describe('FavoritesService', () => {
     expect(result.tickers).toEqual(['005930', '000660']);
   });
 
+  it('배열이 아닌 body는 INVALID_BODY 에러', () => {
+    expect(() => service.update({ tickers: 123 as never })).toThrow(
+      BadRequestException,
+    );
+    expect(() => service.update({ tickers: '005930' as never })).toThrow(
+      BadRequestException,
+    );
+  });
+
   it('사전에 없는 종목은 UNKNOWN_TICKER 에러', () => {
     expect(() => service.update({ tickers: ['999999'] })).toThrow(
       BadRequestException,

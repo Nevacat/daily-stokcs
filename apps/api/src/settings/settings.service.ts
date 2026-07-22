@@ -17,7 +17,8 @@ export class SettingsService {
 
   update(input: Partial<CollectSettings>): CollectSettings {
     const interval = input.intervalMinutes;
-    if (interval !== null && !ALLOWED_INTERVALS.includes(interval as never)) {
+    if (interval === undefined) return this.settings; // 필드 누락 = 기존값 유지
+    if (interval !== null && !ALLOWED_INTERVALS.includes(interval)) {
       throw new BadRequestException({
         error: {
           code: 'INVALID_INTERVAL',
@@ -25,7 +26,7 @@ export class SettingsService {
         },
       });
     }
-    this.settings = { intervalMinutes: interval ?? null };
+    this.settings = { intervalMinutes: interval };
     this.store.save(this.settings);
     this.listeners.forEach((cb) => cb(this.settings));
     return this.settings;
