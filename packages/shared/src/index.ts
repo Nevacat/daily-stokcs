@@ -81,6 +81,22 @@ export interface DailyBriefing {
   topPicks: Recommendation[];
 }
 
+/** 일별 감성 집계 (기획서 §3.5 — 최근 7일 트렌드) */
+export interface SentimentTrendDay {
+  /** KST 기준 YYYY-MM-DD */
+  date: string;
+  positive: number;
+  negative: number;
+  neutral: number;
+}
+
+export interface SentimentTrend {
+  /** ticker 또는 sector 중 하나 */
+  target: { ticker?: string; sector?: Sector };
+  /** 과거 → 오늘 순 7일 */
+  days: SentimentTrendDay[];
+}
+
 /** 날짜별 추천 스냅샷 (기획서 §3.3 — 해당 날짜의 마지막 추천 결과) */
 export interface HistoryEntry {
   /** KST 기준 YYYY-MM-DD */
