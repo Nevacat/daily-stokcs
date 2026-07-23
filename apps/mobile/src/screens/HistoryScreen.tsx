@@ -11,6 +11,8 @@ import { CalendarDays } from 'lucide-react-native';
 import type { HistoryEntry } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
 import { api } from '../api/client';
+import { ErrorCard } from '../components/ErrorCard';
+import { SkeletonCard } from '../components/Skeleton';
 import { Card, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -26,6 +28,7 @@ export function HistoryScreen() {
   const { colors } = useTheme();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
@@ -35,7 +38,9 @@ export function HistoryScreen() {
       setEntries(res.data);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했습니다.');
+      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -63,15 +68,24 @@ export function HistoryScreen() {
       <Text style={[styles.title, { color: colors.textPrimary }]}>히스토리</Text>
 
       {error && (
-        <Card>
-          <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
-        </Card>
+        <ErrorCard
+          message={error}
+          onRetry={() => {
+            setLoading(true);
+            void load();
+          }}
+        />
       )}
 
-      {entries.length === 0 && !error ? (
+      {loading ? (
+        <>
+          <SkeletonCard />
+          <SkeletonCard />
+        </>
+      ) : entries.length === 0 && !error ? (
         <Card>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            아직 기록된 추천이 없습니다. 수집이 실행되면 날짜별로 쌓입니다.
+            아직 기록된 추천이 없어요. 수집이 실행되면 날짜별로 차곡차곡 쌓여요.
           </Text>
         </Card>
       ) : (
@@ -133,8 +147,7 @@ export function HistoryScreen() {
       )}
 
       <Text style={[styles.note, { color: colors.textDisabled }]}>
-        추천 시점 대비 등락률은 서버에 주가 API 키(apps/api/.env의 KIS_APP_KEY)를
-        설정하면 표시됩니다.
+        등락률(적중률)은 추천 당시 주가가 기록된 날부터 보여드려요.
       </Text>
 
       <StockDetailModal

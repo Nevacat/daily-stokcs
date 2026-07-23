@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,9 +11,12 @@ import {
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
 import { SECTOR_LABELS, SECTORS, STOCKS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { ErrorCard } from '../components/ErrorCard';
+import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
+import { SECTOR_ICONS } from '../components/sectorIcons';
 import { StockDetailModal } from './StockDetailModal';
 
 const STOCK_NAMES = new Map(STOCKS.map(s => [s.ticker, s.name]));
@@ -31,6 +35,7 @@ export function NewsScreen() {
   const [sector, setSector] = useState<Sector | null>(null);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   // 필터 변경 후 도착한 이전 요청 응답을 무시하기 위한 시퀀스 토큰
@@ -50,7 +55,9 @@ export function NewsScreen() {
       setError(null);
     } catch (e) {
       if (seq !== requestSeq.current) return;
-      setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했습니다.');
+      setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했어요.');
+    } finally {
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [sector, sentiment]);
 
@@ -95,6 +102,7 @@ export function NewsScreen() {
               label={SECTOR_LABELS[s]}
               active={sector === s}
               onPress={() => setSector(sector === s ? null : s)}
+              Icon={SECTOR_ICONS[s]}
             />
           ))}
         </ScrollView>
@@ -118,11 +126,28 @@ export function NewsScreen() {
         onEndReached={() => void loadMore()}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={
-          <Card>
-            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-              {error ?? '표시할 뉴스가 없습니다. 홈에서 수집을 실행해보세요.'}
-            </Text>
-          </Card>
+          loading ? (
+            <View style={styles.skeletons}>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </View>
+          ) : error ? (
+            <ErrorCard
+              message={error}
+              onRetry={() => {
+                setLoading(true);
+                void load();
+              }}
+            />
+          ) : (
+            <Card>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                아직 보여드릴 뉴스가 없어요. 홈에서 수집을 실행해볼까요?
+              </Text>
+            </Card>
+          )
         }
         ListFooterComponent={
           cursor ? (
@@ -158,14 +183,24 @@ export function NewsScreen() {
                 </Pressable>
               ))}
             </View>
-            <Text
-              style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', lineHeight: 20 }}
-            >
-              {item.title}
-            </Text>
-            <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
-              {item.press} · {formatKst(item.publishedAt)}
-            </Text>
+            <View style={styles.newsBody}>
+              <View style={styles.newsTextCol}>
+                <Text
+                  style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', lineHeight: 20 }}
+                >
+                  {item.title}
+                </Text>
+                <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
+                  {item.press} · {formatKst(item.publishedAt)}
+                </Text>
+              </View>
+              {item.imageUrl && (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={[styles.thumbnail, { backgroundColor: colors.surface }]}
+                />
+              )}
+            </View>
           </Card>
         )}
       />
@@ -181,4 +216,8 @@ export function NewsScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800' },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  skeletons: { gap: spacing.md },
+  newsBody: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  newsTextCol: { flex: 1, gap: 6 },
+  thumbnail: { width: 64, height: 64, borderRadius: 12 },
 });

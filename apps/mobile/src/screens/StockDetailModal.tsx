@@ -11,8 +11,10 @@ import { ExternalLink, X } from 'lucide-react-native';
 import type { StockDetail } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
-import { Card, ScorePill, SentimentBadge } from '../components/ui';
+import { StockLogo } from '../components/StockLogo';
+import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 
@@ -39,7 +41,7 @@ export function StockDetailModal({
       .stockDetail(ticker)
       .then(res => setDetail(res.data))
       .catch(e =>
-        setError(e instanceof Error ? e.message : '종목 정보를 불러오지 못했습니다.'),
+        setError(e instanceof Error ? e.message : '종목 정보를 불러오지 못했어요.'),
       );
   }, [ticker]);
 
@@ -67,6 +69,7 @@ export function StockDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
+                  <StockLogo ticker={detail.stock.ticker} size={40} />
                   <View style={styles.stockInfo}>
                     <Text style={[styles.stockName, { color: colors.textPrimary }]}>
                       {detail.stock.name}
@@ -75,12 +78,21 @@ export function StockDetailModal({
                       {MARKET_LABELS[detail.stock.market]} ·{' '}
                       {SECTOR_LABELS[detail.stock.sector]} · {detail.stock.ticker}
                     </Text>
+                    {detail.quote && <QuoteLine quote={detail.quote} size={15} />}
                   </View>
                   {detail.recommendation && (
                     <ScorePill score={detail.recommendation.score} />
                   )}
                 </View>
               </Card>
+
+              {/* 주가 차트 (토스 스타일, 구간 선택) */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  주가 차트
+                </Text>
+                <PriceChartCard ticker={detail.stock.ticker} />
+              </View>
 
               {detail.recommendation ? (
                 <View style={styles.section}>
@@ -96,7 +108,7 @@ export function StockDetailModal({
               ) : (
                 <Card>
                   <Text style={[styles.reason, { color: colors.textSecondary }]}>
-                    현재 추천 중인 종목은 아닙니다. 아래 뉴스 흐름을 참고하세요.
+                    지금 추천 중인 종목은 아니에요. 아래 뉴스 흐름을 참고해보세요.
                   </Text>
                 </Card>
               )}
@@ -117,7 +129,7 @@ export function StockDetailModal({
                 {detail.news.length === 0 ? (
                   <Card>
                     <Text style={[styles.reason, { color: colors.textSecondary }]}>
-                      최근 7일 내 관련 뉴스가 없습니다.
+                      최근 7일 동안은 관련 뉴스가 없었어요.
                     </Text>
                   </Card>
                 ) : (
@@ -143,7 +155,7 @@ export function StockDetailModal({
               </View>
 
               <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-                본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+                DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
               </Text>
             </>
           )}

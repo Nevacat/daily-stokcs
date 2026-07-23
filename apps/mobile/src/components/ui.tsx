@@ -8,7 +8,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import type { Sentiment } from '@daily-stocks/shared';
+import type { Sentiment, StockQuote } from '@daily-stocks/shared';
+import { formatPrice } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -25,7 +26,7 @@ export function Card({
 }>) {
   const { colors } = useTheme();
   const base: ViewStyle = {
-    backgroundColor: selected ? colors.surface : colors.card,
+    backgroundColor: selected ? colors.primarySoft : colors.card,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
@@ -103,31 +104,36 @@ export function Button({
   );
 }
 
-/** 알약형 선택 칩 (섹터/필터/설정 공용) */
+/** 알약형 선택 칩 (섹터/필터/설정 공용) — 아이콘 옵션 지원 */
 export function Chip({
   label,
   active,
   onPress,
+  Icon,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  Icon?: React.ComponentType<{ size?: number; color?: string }>;
 }) {
   const { colors } = useTheme();
+  const textColor = active ? colors.primary : colors.textSecondary;
+  // 토스 스타일: 선택 상태도 원색 채움 대신 옅은 블루 배경 + 블루 텍스트
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.chip,
         {
-          backgroundColor: active ? colors.primary : colors.surface,
-          borderColor: active ? colors.primary : colors.border,
+          backgroundColor: active ? colors.primarySoft : colors.surface,
+          borderColor: active ? colors.primarySoft : colors.border,
         },
       ]}
     >
+      {Icon && <Icon size={13} color={textColor} />}
       <Text
         style={{
-          color: active ? '#FFFFFF' : colors.textSecondary,
+          color: textColor,
           fontSize: 13,
           fontWeight: active ? '700' : '500',
         }}
@@ -162,15 +168,40 @@ export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
   );
 }
 
+/** 시세 한 줄: 가격 + 전일 대비 등락률 (국내 관례: 상승 빨강 ▲ / 하락 파랑 ▼) */
+export function QuoteLine({
+  quote,
+  size = 13,
+}: {
+  quote: StockQuote;
+  size?: number;
+}) {
+  const { colors } = useTheme();
+  const up = quote.changePct > 0;
+  const flat = quote.changePct === 0;
+  const changeColor = flat ? colors.textSecondary : up ? colors.danger : colors.primary;
+  return (
+    <Text style={{ fontSize: size }}>
+      <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>
+        {formatPrice(quote)}
+      </Text>
+      <Text style={{ color: changeColor, fontWeight: '600' }}>
+        {'  '}
+        {flat ? '—' : up ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(2)}%
+      </Text>
+    </Text>
+  );
+}
+
 /** 0~100 추천 점수 */
 export function ScorePill({ score }: { score: number }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.score, { backgroundColor: colors.surface }]}>
+    <View style={[styles.score, { backgroundColor: colors.primarySoft }]}>
       <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 16 }}>
         {score}
       </Text>
-      <Text style={{ color: colors.textDisabled, fontSize: 10 }}>점</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>점</Text>
     </View>
   );
 }
@@ -187,6 +218,9 @@ const styles = StyleSheet.create({
   },
   buttonText: { fontSize: 15, fontWeight: '700' },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     borderRadius: radius.chip,
     borderWidth: 1,
     paddingVertical: 8,

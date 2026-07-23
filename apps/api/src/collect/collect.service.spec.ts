@@ -29,7 +29,9 @@ function makeService(articles: RawArticle[]) {
     new RecommendationService(),
     new SettingsService(),
     new HistoryService(),
-    new PriceService(),
+    {
+      getPrices: jest.fn().mockResolvedValue(new Map()),
+    } as unknown as PriceService,
     new FavoritesService(),
     new NotificationService(new DevicesService()),
   );
@@ -95,7 +97,9 @@ describe('CollectService', () => {
       new RecommendationService(),
       new SettingsService(),
       new HistoryService(),
-      new PriceService(),
+      {
+        getPrices: jest.fn().mockResolvedValue(new Map()),
+      } as unknown as PriceService,
       new FavoritesService(),
       new NotificationService(new DevicesService()),
     );

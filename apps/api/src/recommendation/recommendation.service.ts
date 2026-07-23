@@ -110,7 +110,7 @@ export class RecommendationService {
       negative === 0
         ? `긍정 뉴스 ${positive}건`
         : `긍정 뉴스 ${positive}건, 부정 뉴스 ${negative}건`;
-    return `${SECTOR_LABELS[sector]} 섹터의 ${name} 관련 ${balance}이 수집되어 종합 점수 ${score}점으로 산출되었습니다.`;
+    return `${SECTOR_LABELS[sector]} 섹터의 ${name}, ${balance}이 모여서 종합 ${score}점이에요.`;
   }
 
   findAll(sector?: Sector): Recommendation[] {

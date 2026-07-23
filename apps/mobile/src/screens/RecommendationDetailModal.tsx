@@ -13,11 +13,14 @@ import type {
   NewsItem,
   Recommendation,
   SentimentTrend,
+  StockQuote,
 } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
-import { Card, ScorePill, SentimentBadge } from '../components/ui';
+import { StockLogo } from '../components/StockLogo';
+import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -33,26 +36,33 @@ export function RecommendationDetailModal({
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [evidence, setEvidence] = useState<NewsItem[]>([]);
   const [trend, setTrend] = useState<SentimentTrend | null>(null);
+  const [quote, setQuote] = useState<StockQuote | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!recommendationId) return;
     setRecommendation(null);
     setTrend(null);
+    setQuote(null);
     setError(null);
     api
       .recommendationDetail(recommendationId)
       .then(res => {
         setRecommendation(res.data.recommendation);
         setEvidence(res.data.evidence);
-        // 트렌드는 부가 정보 — 실패해도 상세는 그대로 보여준다
+        // 트렌드·시세는 부가 정보 — 실패해도 상세는 그대로 보여준다
+        const ticker = res.data.recommendation.ticker;
         api
-          .tickerTrend(res.data.recommendation.ticker)
+          .tickerTrend(ticker)
           .then(t => setTrend(t.data))
+          .catch(() => {});
+        api
+          .quotes([ticker])
+          .then(q => setQuote(q.data[ticker] ?? null))
           .catch(() => {});
       })
       .catch(e =>
-        setError(e instanceof Error ? e.message : '상세를 불러오지 못했습니다.'),
+        setError(e instanceof Error ? e.message : '상세를 불러오지 못했어요.'),
       );
   }, [recommendationId]);
 
@@ -67,7 +77,7 @@ export function RecommendationDetailModal({
       `[DeTok] ${recommendation.stockName} (${recommendation.ticker}) — 종합 ${recommendation.score}점`,
       recommendation.reason,
       evidenceLines ? `근거 뉴스\n${evidenceLines}` : null,
-      '※ 본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.',
+      '※ DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.',
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -109,6 +119,7 @@ export function RecommendationDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
+                  <StockLogo ticker={recommendation.ticker} size={40} />
                   <View style={{ gap: 4, flex: 1 }}>
                     <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: '800' }}>
                       {recommendation.stockName}
@@ -116,6 +127,7 @@ export function RecommendationDetailModal({
                     <Text style={{ color: colors.indigo, fontSize: 12, fontWeight: '600' }}>
                       {SECTOR_LABELS[recommendation.sector]} · {recommendation.ticker}
                     </Text>
+                    {quote && <QuoteLine quote={quote} size={15} />}
                     <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
                       추천 시각 {formatKst(recommendation.recommendedAt)}
                     </Text>
@@ -123,6 +135,14 @@ export function RecommendationDetailModal({
                   <ScorePill score={recommendation.score} />
                 </View>
               </Card>
+
+              {/* 주가 차트 (토스 스타일, 구간 선택) */}
+              <View style={{ gap: spacing.sm }}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  주가 차트
+                </Text>
+                <PriceChartCard ticker={recommendation.ticker} />
+              </View>
 
               <View style={{ gap: spacing.sm }}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -173,7 +193,7 @@ export function RecommendationDetailModal({
               </View>
 
               <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-                본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+                DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
               </Text>
             </>
           )}

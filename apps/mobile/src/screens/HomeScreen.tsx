@@ -15,22 +15,30 @@ import type {
   Market,
   Recommendation,
   Sector,
+  StockQuote,
 } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import { BriefingCard } from '../components/BriefingCard';
-import { Button, Card, Chip, ScorePill } from '../components/ui';
+import { StockLogo } from '../components/StockLogo';
+import { SECTOR_ICONS } from '../components/sectorIcons';
+import { ErrorCard } from '../components/ErrorCard';
+import { SkeletonCard } from '../components/Skeleton';
+import { Button, Card, Chip, QuoteLine, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 import { RecommendationDetailModal } from './RecommendationDetailModal';
 
 function RecommendationCard({
   rec,
+  quote,
   favorite,
   onPress,
   onToggleFavorite,
 }: {
   rec: Recommendation;
+  quote: StockQuote | null;
   favorite: boolean;
   onPress: () => void;
   onToggleFavorite: () => void;
@@ -41,6 +49,7 @@ function RecommendationCard({
       <View style={styles.rowBetween}>
         <View style={styles.cardBody}>
           <View style={styles.row}>
+            <StockLogo ticker={rec.ticker} size={28} />
             <Text style={[styles.stockName, { color: colors.textPrimary }]}>
               {rec.stockName}
             </Text>
@@ -58,6 +67,7 @@ function RecommendationCard({
           <Text style={[styles.sectorLine, { color: colors.indigo }]}>
             {SECTOR_LABELS[rec.sector]} · 근거 뉴스 {rec.newsIds.length}건
           </Text>
+          {quote && <QuoteLine quote={quote} />}
           <Text
             style={[styles.reason, { color: colors.textSecondary }]}
             numberOfLines={2}
@@ -71,9 +81,31 @@ function RecommendationCard({
   );
 }
 
+/** 시간대별 인사말 (뉴닉·토스 톤) */
+function greeting(nickname?: string): string {
+  const hour = Number(
+    new Date().toLocaleString('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'Asia/Seoul',
+    }),
+  );
+  const message =
+    hour < 6
+      ? '늦은 밤까지 수고가 많아요'
+      : hour < 12
+        ? '좋은 아침이에요'
+        : hour < 18
+          ? '좋은 오후예요'
+          : '편안한 저녁이에요';
+  return nickname ? `${nickname}님, ${message} 👋` : `${message} 👋`;
+}
+
 export function HomeScreen() {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [quotes, setQuotes] = useState<Record<string, StockQuote | null>>({});
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [favoriteTickers, setFavoriteTickers] = useState<string[]>([]);
   const [sector, setSector] = useState<Sector | null>(null);
@@ -82,6 +114,7 @@ export function HomeScreen() {
   const [nextCollectAt, setNextCollectAt] = useState<string | undefined>();
   const [collecting, setCollecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
@@ -99,8 +132,17 @@ export function HomeScreen() {
       setFavoriteTickers(favorites.data.tickers);
       setBriefing(brief.data);
       setError(null);
+      // 시세는 부가 정보 — 실패해도 추천 표시에는 영향 없음
+      if (recs.data.length > 0) {
+        api
+          .quotes(recs.data.map(r => r.ticker))
+          .then(q => setQuotes(q.data))
+          .catch(() => {});
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '서버에 연결할 수 없습니다.');
+      setError(e instanceof Error ? e.message : '서버에 연결하지 못했어요.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -114,7 +156,7 @@ export function HomeScreen() {
       await api.collect();
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '수집에 실패했습니다.');
+      setError(e instanceof Error ? e.message : '수집에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setCollecting(false);
     }
@@ -153,6 +195,7 @@ export function HomeScreen() {
     <RecommendationCard
       key={rec.id}
       rec={rec}
+      quote={quotes[rec.ticker] ?? null}
       favorite={favoriteTickers.includes(rec.ticker)}
       onPress={() => setDetailId(rec.id)}
       onToggleFavorite={() => void toggleFavorite(rec.ticker)}
@@ -183,7 +226,7 @@ export function HomeScreen() {
               DeTok
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              뉴스를 읽는 가장 스마트한 방법
+              {greeting(user ? user.nickname : undefined)}
             </Text>
           </View>
         </View>
@@ -214,11 +257,13 @@ export function HomeScreen() {
         </Card>
 
         {error && (
-          <Card>
-            <Text style={[styles.errorText, { color: colors.danger }]}>
-              {error}
-            </Text>
-          </Card>
+          <ErrorCard
+            message={error}
+            onRetry={() => {
+              setLoading(true);
+              void load();
+            }}
+          />
         )}
 
         {/* 관심 종목 추천 — 상단 고정 (기획서 §3.1) */}
@@ -260,17 +305,26 @@ export function HomeScreen() {
               label={SECTOR_LABELS[s]}
               active={sector === s}
               onPress={() => setSector(s)}
+              Icon={SECTOR_ICONS[s]}
             />
           ))}
         </ScrollView>
 
         {/* 추천 카드 리스트 — 섹터 선택 시 해당 섹터가 비어도 안내 문구 표시 */}
-        {listRecs.length === 0 && (sector !== null || favoriteRecs.length === 0) ? (
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : listRecs.length === 0 &&
+          !error &&
+          (sector !== null || favoriteRecs.length === 0) ? (
           <Card>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {sector !== null
-                ? `${SECTOR_LABELS[sector]} 섹터의 추천이 아직 없습니다.`
-                : '아직 추천이 없습니다. 지금 수집하기를 눌러 최신 뉴스를 분석해보세요.'}
+                ? `${SECTOR_LABELS[sector]} 섹터엔 아직 추천이 없어요. 다음 수집을 기다려주세요!`
+                : "아직 추천이 없어요. '지금 수집하기'를 눌러 최신 뉴스를 분석해볼까요?"}
             </Text>
           </Card>
         ) : (
@@ -278,7 +332,7 @@ export function HomeScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-          본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+          DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
         </Text>
       </ScrollView>
 
@@ -294,7 +348,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.xl, gap: spacing.lg },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  logo: { width: 44, height: 44, borderRadius: 12 },
+  logo: { width: 44, height: 44, borderRadius: 22 },
   title: { fontSize: 22, fontWeight: '800' },
   subtitle: { fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

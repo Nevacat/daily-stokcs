@@ -57,6 +57,43 @@ describe('RssCollectorService', () => {
     expect(articles).toHaveLength(4); // 실패 1개 피드 제외
   });
 
+  it('썸네일을 enclosure → media:content → 본문 img 순으로 추출한다', async () => {
+    parseURL.mockResolvedValue({
+      items: [
+        {
+          title: 'A',
+          link: 'https://example.com/1',
+          enclosure: { url: 'https://img.example.com/a.jpg' },
+        },
+        {
+          title: 'B',
+          link: 'https://example.com/2',
+          media: { $: { url: 'https://img.example.com/b.jpg' } },
+        },
+        {
+          title: 'C',
+          link: 'https://example.com/3',
+          content: '<p><img src="https://img.example.com/c.jpg"/></p>',
+        },
+        { title: 'D', link: 'https://example.com/4' }, // 이미지 없음
+        {
+          title: 'E',
+          link: 'https://example.com/5',
+          enclosure: { url: 'javascript:alert(1)' }, // http(s) 아닌 스킴 거부
+        },
+      ],
+    });
+    const articles = await new RssCollectorService().collect();
+    const first5 = articles.slice(0, 5).map((a) => a.image);
+    expect(first5).toEqual([
+      'https://img.example.com/a.jpg',
+      'https://img.example.com/b.jpg',
+      'https://img.example.com/c.jpg',
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('isoDate가 없으면 현재 시각으로 대체한다', async () => {
     parseURL.mockResolvedValue({
       items: [{ title: '제목', link: 'https://example.com/1' }],

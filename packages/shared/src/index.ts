@@ -44,6 +44,8 @@ export interface NewsItem {
   sectors: Sector[];
   tickers: string[];
   sentiment: Sentiment;
+  /** 기사 썸네일 (RSS 제공 시) */
+  imageUrl?: string;
 }
 
 export interface Recommendation {
@@ -79,11 +81,46 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 실시간(지연) 시세 — Yahoo Finance 기반, 키 불필요 */
+export interface StockQuote {
+  ticker: string;
+  price: number;
+  previousClose: number;
+  /** 전일 종가 대비 등락률(%) */
+  changePct: number;
+  currency: string; // KRW | USD
+  at: string; // ISO 8601 UTC
+}
+
+/** 주가 차트 구간 */
+export const CHART_RANGES = ['1d', '1w', '1m', '3m', '1y'] as const;
+export type ChartRange = (typeof CHART_RANGES)[number];
+
+export const CHART_RANGE_LABELS: Record<ChartRange, string> = {
+  '1d': '1일',
+  '1w': '1주',
+  '1m': '1달',
+  '3m': '3달',
+  '1y': '1년',
+};
+
+/** 주가 차트 데이터 (Yahoo 기반, 15~20분 지연) */
+export interface PriceChart {
+  ticker: string;
+  currency: string;
+  range: ChartRange;
+  /** 1d 기준선(전일 종가). 그 외 구간은 첫 포인트 기준 */
+  previousClose: number | null;
+  points: { t: string; price: number }[];
+}
+
 /** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
 export interface StockDetail {
   stock: { ticker: string; name: string; sector: Sector; market: Market };
   /** 현재 추천 중이 아니면 null */
   recommendation: Recommendation | null;
+  /** 시세 조회 실패 시 null */
+  quote: StockQuote | null;
   trend: SentimentTrend;
   /** 관련 뉴스 최신순 */
   news: NewsItem[];
@@ -129,6 +166,25 @@ export interface HistoryEntry {
   date: string;
   generatedAt: string; // ISO 8601 UTC
   recommendations: Recommendation[];
+}
+
+/** 로그인 제공자 — dev는 개발용(프로덕션 비활성) */
+export type AuthProvider = 'kakao' | 'apple' | 'dev';
+
+export interface UserProfile {
+  id: string;
+  provider: AuthProvider;
+  nickname: string;
+  email?: string;
+  /** 약관 동의 시각 (가입 시 필수) */
+  termsAgreedAt: string; // ISO 8601 UTC
+  createdAt: string; // ISO 8601 UTC
+}
+
+export interface AuthResponse {
+  /** Bearer 토큰 (30일) */
+  token: string;
+  user: UserProfile;
 }
 
 /** 푸시 알림 디바이스 등록 (기획서 §3.2) */

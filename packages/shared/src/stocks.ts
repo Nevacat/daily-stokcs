@@ -6,6 +6,10 @@ export interface StockEntry {
   sector: Sector;
   /** KR = 국내(KRX 6자리), US = 미국(심볼) */
   market: Market;
+  /** 국내 종목 거래소 (기본 KOSPI) — 시세 심볼 매핑용 */
+  exchange?: 'KOSPI' | 'KOSDAQ';
+  /** 회사 도메인 — 로고(파비콘) 표시용 */
+  domain?: string;
   /** 기사에서 이 종목을 가리키는 표현들 */
   aliases: string[];
 }
@@ -15,6 +19,7 @@ export const STOCKS: StockEntry[] = [
   // 반도체/AI
   {
     ticker: '005930',
+    domain: 'samsung.com',
     name: '삼성전자',
     sector: 'semiconductor_ai',
     market: 'KR',
@@ -22,6 +27,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '000660',
+    domain: 'skhynix.com',
     name: 'SK하이닉스',
     sector: 'semiconductor_ai',
     market: 'KR',
@@ -29,6 +35,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '042700',
+    domain: 'hanmisemi.com',
     name: '한미반도체',
     sector: 'semiconductor_ai',
     market: 'KR',
@@ -37,6 +44,7 @@ export const STOCKS: StockEntry[] = [
   // 2차전지
   {
     ticker: '373220',
+    domain: 'lgensol.com',
     name: 'LG에너지솔루션',
     sector: 'battery',
     market: 'KR',
@@ -44,6 +52,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '006400',
+    domain: 'samsungsdi.co.kr',
     name: '삼성SDI',
     sector: 'battery',
     market: 'KR',
@@ -51,6 +60,8 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '247540',
+    domain: 'ecoprobm.co.kr',
+    exchange: 'KOSDAQ',
     name: '에코프로비엠',
     sector: 'battery',
     market: 'KR',
@@ -59,6 +70,7 @@ export const STOCKS: StockEntry[] = [
   // 바이오/헬스케어
   {
     ticker: '207940',
+    domain: 'samsungbiologics.com',
     name: '삼성바이오로직스',
     sector: 'bio_healthcare',
     market: 'KR',
@@ -66,6 +78,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '068270',
+    domain: 'celltrion.com',
     name: '셀트리온',
     sector: 'bio_healthcare',
     market: 'KR',
@@ -73,6 +86,8 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '196170',
+    domain: 'alteogen.co.kr',
+    exchange: 'KOSDAQ',
     name: '알테오젠',
     sector: 'bio_healthcare',
     market: 'KR',
@@ -81,6 +96,7 @@ export const STOCKS: StockEntry[] = [
   // 자동차
   {
     ticker: '005380',
+    domain: 'hyundai.com',
     name: '현대차',
     sector: 'automotive',
     market: 'KR',
@@ -88,6 +104,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '000270',
+    domain: 'kia.com',
     name: '기아',
     sector: 'automotive',
     market: 'KR',
@@ -95,6 +112,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '012330',
+    domain: 'mobis.co.kr',
     name: '현대모비스',
     sector: 'automotive',
     market: 'KR',
@@ -103,6 +121,7 @@ export const STOCKS: StockEntry[] = [
   // 금융
   {
     ticker: '105560',
+    domain: 'kbfg.com',
     name: 'KB금융',
     sector: 'finance',
     market: 'KR',
@@ -110,6 +129,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '055550',
+    domain: 'shinhangroup.com',
     name: '신한지주',
     sector: 'finance',
     market: 'KR',
@@ -117,6 +137,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '323410',
+    domain: 'kakaobank.com',
     name: '카카오뱅크',
     sector: 'finance',
     market: 'KR',
@@ -125,6 +146,7 @@ export const STOCKS: StockEntry[] = [
   // 엔터/콘텐츠
   {
     ticker: '352820',
+    domain: 'hybecorp.com',
     name: '하이브',
     sector: 'entertainment',
     market: 'KR',
@@ -132,6 +154,8 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '035900',
+    domain: 'jype.com',
+    exchange: 'KOSDAQ',
     name: 'JYP엔터',
     sector: 'entertainment',
     market: 'KR',
@@ -139,6 +163,8 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '041510',
+    domain: 'smentertainment.com',
+    exchange: 'KOSDAQ',
     name: '에스엠',
     sector: 'entertainment',
     market: 'KR',
@@ -147,6 +173,7 @@ export const STOCKS: StockEntry[] = [
   // 방산/조선
   {
     ticker: '012450',
+    domain: 'hanwhaaerospace.co.kr',
     name: '한화에어로스페이스',
     sector: 'defense_shipbuilding',
     market: 'KR',
@@ -154,6 +181,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '329180',
+    domain: 'hd-hhi.co.kr',
     name: 'HD현대중공업',
     sector: 'defense_shipbuilding',
     market: 'KR',
@@ -161,6 +189,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '047810',
+    domain: 'koreaaero.com',
     name: '한국항공우주',
     sector: 'defense_shipbuilding',
     market: 'KR',
@@ -169,6 +198,7 @@ export const STOCKS: StockEntry[] = [
   // 에너지/화학
   {
     ticker: '051910',
+    domain: 'lgchem.com',
     name: 'LG화학',
     sector: 'energy_chemical',
     market: 'KR',
@@ -176,6 +206,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '096770',
+    domain: 'skinnovation.com',
     name: 'SK이노베이션',
     sector: 'energy_chemical',
     market: 'KR',
@@ -183,6 +214,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '010950',
+    domain: 's-oil.com',
     name: 'S-Oil',
     sector: 'energy_chemical',
     market: 'KR',
@@ -191,32 +223,53 @@ export const STOCKS: StockEntry[] = [
 
   // ===== 미국 시장 (US) =====
   // 반도체/AI·빅테크
-  { ticker: 'NVDA', name: '엔비디아', sector: 'semiconductor_ai', market: 'US', aliases: ['엔비디아', 'Nvidia', 'NVDA'] },
-  { ticker: 'AMD', name: 'AMD', sector: 'semiconductor_ai', market: 'US', aliases: ['AMD'] },
-  { ticker: 'AAPL', name: '애플', sector: 'semiconductor_ai', market: 'US', aliases: ['애플', 'Apple', 'AAPL'] },
-  { ticker: 'MSFT', name: '마이크로소프트', sector: 'semiconductor_ai', market: 'US', aliases: ['마이크로소프트', 'Microsoft', 'MSFT'] },
-  { ticker: 'GOOGL', name: '알파벳', sector: 'semiconductor_ai', market: 'US', aliases: ['알파벳', '구글', 'Alphabet', 'Google', 'GOOGL'] },
+  { ticker: 'NVDA',
+    domain: 'nvidia.com', name: '엔비디아', sector: 'semiconductor_ai', market: 'US', aliases: ['엔비디아', 'Nvidia', 'NVDA'] },
+  { ticker: 'AMD',
+    domain: 'amd.com', name: 'AMD', sector: 'semiconductor_ai', market: 'US', aliases: ['AMD'] },
+  { ticker: 'AAPL',
+    domain: 'apple.com', name: '애플', sector: 'semiconductor_ai', market: 'US', aliases: ['애플', 'Apple', 'AAPL'] },
+  { ticker: 'MSFT',
+    domain: 'microsoft.com', name: '마이크로소프트', sector: 'semiconductor_ai', market: 'US', aliases: ['마이크로소프트', 'Microsoft', 'MSFT'] },
+  { ticker: 'GOOGL',
+    domain: 'google.com', name: '알파벳', sector: 'semiconductor_ai', market: 'US', aliases: ['알파벳', '구글', 'Alphabet', 'Google', 'GOOGL'] },
   // 2차전지/배터리
-  { ticker: 'ALB', name: '앨버말', sector: 'battery', market: 'US', aliases: ['앨버말', 'Albemarle', 'ALB'] },
-  { ticker: 'QS', name: '퀀텀스케이프', sector: 'battery', market: 'US', aliases: ['퀀텀스케이프', 'QuantumScape'] },
+  { ticker: 'ALB',
+    domain: 'albemarle.com', name: '앨버말', sector: 'battery', market: 'US', aliases: ['앨버말', 'Albemarle', 'ALB'] },
+  { ticker: 'QS',
+    domain: 'quantumscape.com', name: '퀀텀스케이프', sector: 'battery', market: 'US', aliases: ['퀀텀스케이프', 'QuantumScape'] },
   // 바이오/헬스케어
-  { ticker: 'LLY', name: '일라이릴리', sector: 'bio_healthcare', market: 'US', aliases: ['일라이릴리', '릴리', 'Eli Lilly', 'LLY'] },
-  { ticker: 'PFE', name: '화이자', sector: 'bio_healthcare', market: 'US', aliases: ['화이자', 'Pfizer', 'PFE'] },
-  { ticker: 'MRNA', name: '모더나', sector: 'bio_healthcare', market: 'US', aliases: ['모더나', 'Moderna', 'MRNA'] },
+  { ticker: 'LLY',
+    domain: 'lilly.com', name: '일라이릴리', sector: 'bio_healthcare', market: 'US', aliases: ['일라이릴리', '릴리', 'Eli Lilly', 'LLY'] },
+  { ticker: 'PFE',
+    domain: 'pfizer.com', name: '화이자', sector: 'bio_healthcare', market: 'US', aliases: ['화이자', 'Pfizer', 'PFE'] },
+  { ticker: 'MRNA',
+    domain: 'modernatx.com', name: '모더나', sector: 'bio_healthcare', market: 'US', aliases: ['모더나', 'Moderna', 'MRNA'] },
   // 자동차
-  { ticker: 'TSLA', name: '테슬라', sector: 'automotive', market: 'US', aliases: ['테슬라', 'Tesla', 'TSLA'] },
-  { ticker: 'F', name: '포드', sector: 'automotive', market: 'US', aliases: ['포드', 'Ford'] },
-  { ticker: 'GM', name: 'GM', sector: 'automotive', market: 'US', aliases: ['제너럴모터스', 'General Motors', 'GM'] },
+  { ticker: 'TSLA',
+    domain: 'tesla.com', name: '테슬라', sector: 'automotive', market: 'US', aliases: ['테슬라', 'Tesla', 'TSLA'] },
+  { ticker: 'F',
+    domain: 'ford.com', name: '포드', sector: 'automotive', market: 'US', aliases: ['포드', 'Ford'] },
+  { ticker: 'GM',
+    domain: 'gm.com', name: 'GM', sector: 'automotive', market: 'US', aliases: ['제너럴모터스', 'General Motors', 'GM'] },
   // 금융
-  { ticker: 'JPM', name: 'JP모건', sector: 'finance', market: 'US', aliases: ['JP모건', 'JPMorgan', 'JPM'] },
-  { ticker: 'GS', name: '골드만삭스', sector: 'finance', market: 'US', aliases: ['골드만삭스', 'Goldman Sachs'] },
+  { ticker: 'JPM',
+    domain: 'jpmorganchase.com', name: 'JP모건', sector: 'finance', market: 'US', aliases: ['JP모건', 'JPMorgan', 'JPM'] },
+  { ticker: 'GS',
+    domain: 'goldmansachs.com', name: '골드만삭스', sector: 'finance', market: 'US', aliases: ['골드만삭스', 'Goldman Sachs'] },
   // 엔터/콘텐츠
-  { ticker: 'DIS', name: '디즈니', sector: 'entertainment', market: 'US', aliases: ['디즈니', 'Disney', 'DIS'] },
-  { ticker: 'NFLX', name: '넷플릭스', sector: 'entertainment', market: 'US', aliases: ['넷플릭스', 'Netflix', 'NFLX'] },
+  { ticker: 'DIS',
+    domain: 'disney.com', name: '디즈니', sector: 'entertainment', market: 'US', aliases: ['디즈니', 'Disney', 'DIS'] },
+  { ticker: 'NFLX',
+    domain: 'netflix.com', name: '넷플릭스', sector: 'entertainment', market: 'US', aliases: ['넷플릭스', 'Netflix', 'NFLX'] },
   // 방산
-  { ticker: 'LMT', name: '록히드마틴', sector: 'defense_shipbuilding', market: 'US', aliases: ['록히드마틴', 'Lockheed Martin', 'LMT'] },
-  { ticker: 'BA', name: '보잉', sector: 'defense_shipbuilding', market: 'US', aliases: ['보잉', 'Boeing'] },
+  { ticker: 'LMT',
+    domain: 'lockheedmartin.com', name: '록히드마틴', sector: 'defense_shipbuilding', market: 'US', aliases: ['록히드마틴', 'Lockheed Martin', 'LMT'] },
+  { ticker: 'BA',
+    domain: 'boeing.com', name: '보잉', sector: 'defense_shipbuilding', market: 'US', aliases: ['보잉', 'Boeing'] },
   // 에너지
-  { ticker: 'XOM', name: '엑슨모빌', sector: 'energy_chemical', market: 'US', aliases: ['엑슨모빌', 'Exxon', 'ExxonMobil', 'XOM'] },
-  { ticker: 'CVX', name: '셰브론', sector: 'energy_chemical', market: 'US', aliases: ['셰브론', 'Chevron', 'CVX'] },
+  { ticker: 'XOM',
+    domain: 'exxonmobil.com', name: '엑슨모빌', sector: 'energy_chemical', market: 'US', aliases: ['엑슨모빌', 'Exxon', 'ExxonMobil', 'XOM'] },
+  { ticker: 'CVX',
+    domain: 'chevron.com', name: '셰브론', sector: 'energy_chemical', market: 'US', aliases: ['셰브론', 'Chevron', 'CVX'] },
 ];

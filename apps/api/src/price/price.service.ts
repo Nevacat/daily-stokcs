@@ -1,58 +1,194 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { ChartRange, PriceChart, StockQuote } from '@daily-stocks/shared';
+import { STOCKS } from '@daily-stocks/shared';
+
+const CACHE_TTL_MS = 5 * 60_000; // 시세 캐시 5분 (무료 소스 과호출 방지)
+
+interface CacheEntry {
+  quote: StockQuote | null;
+  at: number;
+}
+
+/** 구간별 Yahoo range/interval 매핑 */
+const RANGE_PARAMS: Record<ChartRange, { range: string; interval: string }> = {
+  '1d': { range: '1d', interval: '5m' },
+  '1w': { range: '5d', interval: '30m' },
+  '1m': { range: '1mo', interval: '1d' },
+  '3m': { range: '3mo', interval: '1d' },
+  '1y': { range: '1y', interval: '1wk' },
+};
 
 /**
- * 주가 조회 서비스 (한국투자증권 KIS Developers 연동 자리).
+ * 주가 시세 서비스.
  *
- * ┌─ 활성화 방법 ────────────────────────────────────────────┐
- * │ apps/api/.env 에 아래 키를 채우면 됩니다 (.env.example 참고) │
- * │   KIS_APP_KEY=발급받은_APP_KEY                             │
- * │   KIS_APP_SECRET=발급받은_APP_SECRET                       │
- * └──────────────────────────────────────────────────────────┘
+ * 기본 제공자는 Yahoo Finance 공개 차트 API — **키 없이 동작**하며
+ * 국내(KOSPI/KOSDAQ)·미국 종목의 현재가와 전일 대비 등락률을 제공한다.
+ * (비공식 소스이므로 15~20분 지연 시세일 수 있음)
  *
- * 키가 없으면 모든 조회가 null을 반환하고, 적중률 필드는 비활성 상태가 된다.
+ * ┌─ 공식 API(한국투자증권 KIS)로 전환하려면 ────────────────────┐
+ * │ apps/api/.env 에 KIS_APP_KEY/KIS_APP_SECRET을 채우고         │
+ * │ 아래 fetchQuote를 KIS 호출로 교체:                            │
+ * │ 1) POST /oauth2/tokenP 로 access_token 발급 (24h 캐시)        │
+ * │ 2) 국내: /uapi/domestic-stock/v1/quotations/inquire-price     │
+ * │    해외: /uapi/overseas-price/v1/quotations/price             │
+ * └──────────────────────────────────────────────────────────────┘
  */
 @Injectable()
 export class PriceService {
   private readonly logger = new Logger(PriceService.name);
-  private warned = false;
+  private readonly cache = new Map<string, CacheEntry>();
 
-  get enabled(): boolean {
-    return Boolean(process.env.KIS_APP_KEY && process.env.KIS_APP_SECRET);
+  /** Yahoo 심볼 매핑: 국내는 .KS(코스피)/.KQ(코스닥), 미국은 심볼 그대로 */
+  private yahooSymbol(ticker: string): string | null {
+    const stock = STOCKS.find((s) => s.ticker === ticker);
+    if (!stock) return null;
+    if (stock.market === 'US') return ticker;
+    return `${ticker}.${stock.exchange === 'KOSDAQ' ? 'KQ' : 'KS'}`;
   }
 
-  /** 현재가 조회. 미설정 시 null */
-  // eslint-disable-next-line @typescript-eslint/require-await -- KIS 연동 시 await 사용 예정
-  async getPrice(ticker: string): Promise<number | null> {
-    if (!this.enabled) {
-      if (!this.warned) {
-        this.warned = true;
-        this.logger.log(
-          '주가 API 키(KIS_APP_KEY/KIS_APP_SECRET) 미설정 — 적중률 비활성화. .env.example 참고',
-        );
-      }
+  private async fetchQuote(ticker: string): Promise<StockQuote | null> {
+    const symbol = this.yahooSymbol(ticker);
+    if (!symbol) return null;
+
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1d`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } },
+    );
+    if (!res.ok) return null;
+
+    const body = (await res.json()) as {
+      chart?: {
+        result?: {
+          meta?: {
+            regularMarketPrice?: number;
+            chartPreviousClose?: number;
+            previousClose?: number;
+            currency?: string;
+          };
+        }[];
+      };
+    };
+    const meta = body.chart?.result?.[0]?.meta;
+    const price = meta?.regularMarketPrice;
+    const previousClose = meta?.chartPreviousClose ?? meta?.previousClose;
+    if (
+      !Number.isFinite(price) ||
+      !Number.isFinite(previousClose) ||
+      previousClose === 0
+    ) {
       return null;
     }
 
-    // TODO(KIS 키 입력 후 구현):
-    // 1) POST https://openapi.koreainvestment.com:9443/oauth2/tokenP
-    //    body: { grant_type: 'client_credentials', appkey: KIS_APP_KEY, appsecret: KIS_APP_SECRET }
-    //    → access_token 발급 (24h 캐시)
-    // 2) GET /uapi/domestic-stock/v1/quotations/inquire-price
-    //    headers: { authorization: `Bearer ${token}`, appkey, appsecret, tr_id: 'FHKST01010100' }
-    //    query: { FID_COND_MRKT_DIV_CODE: 'J', FID_INPUT_ISCD: ticker }
-    //    → Number(output.stck_prpr) 반환
-    this.logger.warn(
-      `KIS 연동 구현 필요 — getPrice(${ticker})는 아직 null을 반환합니다.`,
-    );
-    return null;
+    return {
+      ticker,
+      price: price!,
+      previousClose: previousClose!,
+      changePct:
+        Math.round(((price! - previousClose!) / previousClose!) * 10000) / 100,
+      currency: meta?.currency ?? 'KRW',
+      at: new Date().toISOString(),
+    };
   }
 
-  /** 여러 종목 일괄 조회 (중복 제거) */
-  async getPrices(tickers: string[]): Promise<Map<string, number | null>> {
+  /** 시세 조회 (5분 캐시). 실패·미등록 종목은 null */
+  async getQuote(ticker: string): Promise<StockQuote | null> {
+    const cached = this.cache.get(ticker);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.quote;
+
+    let quote: StockQuote | null = null;
+    try {
+      quote = await this.fetchQuote(ticker);
+    } catch (e) {
+      this.logger.warn(`시세 조회 실패 (${ticker}): ${String(e)}`);
+    }
+    this.cache.set(ticker, { quote, at: Date.now() });
+    return quote;
+  }
+
+  private readonly chartCache = new Map<
+    string,
+    { chart: PriceChart | null; at: number }
+  >();
+
+  /** 주가 차트 조회 (구간별, 5분 캐시). 실패·미등록 종목은 null */
+  async getChart(
+    ticker: string,
+    range: ChartRange,
+  ): Promise<PriceChart | null> {
+    const key = `${ticker}:${range}`;
+    const cached = this.chartCache.get(key);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.chart;
+
+    let chart: PriceChart | null = null;
+    try {
+      const symbol = this.yahooSymbol(ticker);
+      if (symbol) {
+        const params = RANGE_PARAMS[range];
+        const res = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${params.range}&interval=${params.interval}`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' } },
+        );
+        if (res.ok) {
+          const body = (await res.json()) as {
+            chart?: {
+              result?: {
+                meta?: { currency?: string; chartPreviousClose?: number };
+                timestamp?: number[];
+                indicators?: { quote?: { close?: (number | null)[] }[] };
+              }[];
+            };
+          };
+          const result = body.chart?.result?.[0];
+          const timestamps = result?.timestamp ?? [];
+          const closes = result?.indicators?.quote?.[0]?.close ?? [];
+          const points = timestamps
+            .map((t, i) => ({ t, price: closes[i] }))
+            .filter((p): p is { t: number; price: number } =>
+              Number.isFinite(p.price),
+            )
+            .map((p) => ({
+              t: new Date(p.t * 1000).toISOString(),
+              price: p.price,
+            }));
+          if (points.length > 1) {
+            chart = {
+              ticker,
+              currency: result?.meta?.currency ?? 'KRW',
+              range,
+              previousClose: result?.meta?.chartPreviousClose ?? null,
+              points,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`차트 조회 실패 (${ticker}, ${range}): ${String(e)}`);
+    }
+    this.chartCache.set(key, { chart, at: Date.now() });
+    return chart;
+  }
+
+  /** 여러 종목 시세 일괄 조회 (중복 제거) */
+  async getQuotes(
+    tickers: string[],
+  ): Promise<Record<string, StockQuote | null>> {
     const unique = [...new Set(tickers)];
     const entries = await Promise.all(
-      unique.map(async (t) => [t, await this.getPrice(t)] as const),
+      unique.map(async (t) => [t, await this.getQuote(t)] as const),
     );
-    return new Map(entries);
+    return Object.fromEntries(entries);
+  }
+
+  /** 현재가만 필요할 때 (히스토리 적중률 계산용) */
+  async getPrice(ticker: string): Promise<number | null> {
+    return (await this.getQuote(ticker))?.price ?? null;
+  }
+
+  /** 여러 종목 현재가 (중복 제거) */
+  async getPrices(tickers: string[]): Promise<Map<string, number | null>> {
+    const quotes = await this.getQuotes(tickers);
+    return new Map(
+      Object.entries(quotes).map(([t, q]) => [t, q?.price ?? null]),
+    );
   }
 }
