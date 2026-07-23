@@ -1,6 +1,14 @@
 # DeTok Design System
 
-> Version 1.0 — 원본 브랜드 가이드. 코드 반영은 `apps/mobile/src/theme/tokens.ts` 참조.
+> Version 1.1 — 원본 브랜드 가이드. 코드 반영은 `apps/mobile/src/theme/tokens.ts` 참조.
+
+## v1.1 변경 (2026-07-23, 사용자 피드백)
+
+- Primary를 `#5B5CFF` → **`#3182F6`(Calm Blue, 토스 계열)**로 완화 — 고채도 블루가 눈에 피로하다는 피드백 반영. 다크 모드는 `#4E93F8`.
+- **`primarySoft`**(라이트 `#EAF2FE` / 다크 `#1F3252`) 도입 — 선택 칩·점수 pill·강조 카드 배경은 원색 채움 대신 옅은 블루 + 블루 텍스트 (색 면적 최소화).
+- 텍스트/보더를 토스 그레이 계열로 조정 (`#191F28`, `#6B7684`, `#E5E8EB`).
+- Violet(`#9D86FF`) 그라디언트·로고 아이덴티티는 유지. Indigo는 `#6C8CF5`로 완화.
+- 아래 v1.0 원본 값은 브랜드 히스토리로 보존.
 
 ## Brand Philosophy
 
