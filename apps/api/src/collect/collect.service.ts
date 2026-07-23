@@ -82,7 +82,7 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
       throw new ConflictException({
         error: {
           code: 'COLLECT_IN_PROGRESS',
-          message: '이미 수집이 진행 중입니다.',
+          message: '이미 수집이 진행 중이에요. 잠시만 기다려주세요.',
         },
       });
     }

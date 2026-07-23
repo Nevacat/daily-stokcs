@@ -51,14 +51,14 @@ export function SettingsScreen() {
   const onWithdraw = () => {
     Alert.alert(
       '회원 탈퇴',
-      '계정과 관심 종목 데이터가 즉시 삭제되며 복구할 수 없습니다. 탈퇴하시겠어요?',
+      '계정과 관심 종목 데이터가 바로 삭제되고 복구할 수 없어요. 정말 탈퇴하시겠어요?',
       [
         { text: '취소', style: 'cancel' },
         {
           text: '탈퇴하기',
           style: 'destructive',
           onPress: () =>
-            void withdraw().catch(() => setError('탈퇴 처리에 실패했습니다.')),
+            void withdraw().catch(() => setError('탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요.')),
         },
       ],
     );
@@ -68,7 +68,7 @@ export function SettingsScreen() {
     api
       .settings()
       .then(res => setSettings(res.data))
-      .catch(() => setError('설정을 불러오지 못했습니다. 서버 연결을 확인해주세요.'));
+      .catch(() => setError('설정을 불러오지 못했어요. 서버 연결을 확인해주세요.'));
   }, []);
 
   const updateInterval = async (intervalMinutes: CollectSettings['intervalMinutes']) => {
@@ -80,7 +80,7 @@ export function SettingsScreen() {
       setError(null);
     } catch (e) {
       setSettings(prev);
-      setError(e instanceof Error ? e.message : '설정 변경에 실패했습니다.');
+      setError(e instanceof Error ? e.message : '설정을 바꾸지 못했어요.');
     }
   };
 
@@ -167,8 +167,8 @@ export function SettingsScreen() {
             />
           </View>
           <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
-            설정한 주기마다 뉴스를 자동으로 수집하고 추천을 갱신합니다. 끄더라도
-            홈의 '지금 수집하기'로 수동 수집할 수 있습니다.
+            설정한 주기마다 뉴스를 모아 추천을 새로 만들어드려요. 끄더라도 홈의
+            '지금 수집하기'로 언제든 직접 모을 수 있어요.
           </Text>
         </Card>
       </View>
@@ -178,8 +178,8 @@ export function SettingsScreen() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>알림</Text>
         <Card>
           <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 19 }}>
-            관심 종목에 새 추천이 생기면 푸시로 알려드립니다. 곧 업데이트로
-            제공될 예정입니다.
+            관심 종목에 새 추천이 생기면 푸시로 알려드릴게요. 곧 업데이트로
+            만나요!
           </Text>
         </Card>
       </View>
@@ -195,9 +195,9 @@ export function SettingsScreen() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>안내</Text>
         <Card>
           <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 19 }}>
-            DeTok은 뉴스 데이터를 분석해 정보를 제공하는 서비스이며, 투자 자문이
-            아닙니다. 본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게
-            있습니다.
+            DeTok은 뉴스 데이터를 분석해 정보를 드리는 서비스예요. 투자 자문이
+            아니에요. 투자 판단과 책임은 언제나 본인에게 있다는 점, 꼭
+            기억해주세요.
           </Text>
         </Card>
       </View>

@@ -53,7 +53,7 @@ export function NewsScreen() {
       setError(null);
     } catch (e) {
       if (seq !== requestSeq.current) return;
-      setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했습니다.');
+      setError(e instanceof Error ? e.message : '뉴스를 불러오지 못했어요.');
     } finally {
       if (seq === requestSeq.current) setLoading(false);
     }
@@ -141,7 +141,7 @@ export function NewsScreen() {
           ) : (
             <Card>
               <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                표시할 뉴스가 없습니다. 홈에서 수집을 실행해보세요.
+                아직 보여드릴 뉴스가 없어요. 홈에서 수집을 실행해볼까요?
               </Text>
             </Card>
           )

@@ -28,7 +28,7 @@ export function LoginScreen() {
 
   const guard = (): boolean => {
     if (!agreed) {
-      setError('약관에 동의해야 시작할 수 있습니다.');
+      setError('약관에 동의해야 시작할 수 있어요.');
       return false;
     }
     setError(null);
@@ -40,7 +40,7 @@ export function LoginScreen() {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '로그인에 실패했습니다.');
+      setError(e instanceof Error ? e.message : '로그인에 실패했어요. 다시 시도해주세요.');
     } finally {
       setBusy(false);
     }
@@ -185,7 +185,7 @@ export function LoginScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-          본 서비스는 투자 자문이 아닌 정보 제공 서비스입니다.
+          DeTok은 투자 자문이 아닌 정보 제공 서비스예요.
         </Text>
       </View>
 

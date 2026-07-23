@@ -19,6 +19,7 @@ import type {
 } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import { BriefingCard } from '../components/BriefingCard';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
@@ -77,8 +78,29 @@ function RecommendationCard({
   );
 }
 
+/** 시간대별 인사말 (뉴닉·토스 톤) */
+function greeting(nickname?: string): string {
+  const hour = Number(
+    new Date().toLocaleString('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'Asia/Seoul',
+    }),
+  );
+  const message =
+    hour < 6
+      ? '늦은 밤까지 수고가 많아요'
+      : hour < 12
+        ? '좋은 아침이에요'
+        : hour < 18
+          ? '좋은 오후예요'
+          : '편안한 저녁이에요';
+  return nickname ? `${nickname}님, ${message} 👋` : `${message} 👋`;
+}
+
 export function HomeScreen() {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [quotes, setQuotes] = useState<Record<string, StockQuote | null>>({});
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
@@ -115,7 +137,7 @@ export function HomeScreen() {
           .catch(() => {});
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '서버에 연결할 수 없습니다.');
+      setError(e instanceof Error ? e.message : '서버에 연결하지 못했어요.');
     } finally {
       setLoading(false);
     }
@@ -131,7 +153,7 @@ export function HomeScreen() {
       await api.collect();
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '수집에 실패했습니다.');
+      setError(e instanceof Error ? e.message : '수집에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setCollecting(false);
     }
@@ -201,7 +223,7 @@ export function HomeScreen() {
               DeTok
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              뉴스를 읽는 가장 스마트한 방법
+              {greeting(user ? user.nickname : undefined)}
             </Text>
           </View>
         </View>
@@ -297,8 +319,8 @@ export function HomeScreen() {
           <Card>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {sector !== null
-                ? `${SECTOR_LABELS[sector]} 섹터의 추천이 아직 없습니다.`
-                : '아직 추천이 없습니다. 지금 수집하기를 눌러 최신 뉴스를 분석해보세요.'}
+                ? `${SECTOR_LABELS[sector]} 섹터엔 아직 추천이 없어요. 다음 수집을 기다려주세요!`
+                : "아직 추천이 없어요. '지금 수집하기'를 눌러 최신 뉴스를 분석해볼까요?"}
             </Text>
           </Card>
         ) : (
@@ -306,7 +328,7 @@ export function HomeScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-          본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+          DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
         </Text>
       </ScrollView>
 

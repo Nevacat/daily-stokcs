@@ -40,7 +40,7 @@ export function StockDetailModal({
       .stockDetail(ticker)
       .then(res => setDetail(res.data))
       .catch(e =>
-        setError(e instanceof Error ? e.message : '종목 정보를 불러오지 못했습니다.'),
+        setError(e instanceof Error ? e.message : '종목 정보를 불러오지 못했어요.'),
       );
   }, [ticker]);
 
@@ -106,7 +106,7 @@ export function StockDetailModal({
               ) : (
                 <Card>
                   <Text style={[styles.reason, { color: colors.textSecondary }]}>
-                    현재 추천 중인 종목은 아닙니다. 아래 뉴스 흐름을 참고하세요.
+                    지금 추천 중인 종목은 아니에요. 아래 뉴스 흐름을 참고해보세요.
                   </Text>
                 </Card>
               )}
@@ -127,7 +127,7 @@ export function StockDetailModal({
                 {detail.news.length === 0 ? (
                   <Card>
                     <Text style={[styles.reason, { color: colors.textSecondary }]}>
-                      최근 7일 내 관련 뉴스가 없습니다.
+                      최근 7일 동안은 관련 뉴스가 없었어요.
                     </Text>
                   </Card>
                 ) : (
@@ -153,7 +153,7 @@ export function StockDetailModal({
               </View>
 
               <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-                본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+                DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
               </Text>
             </>
           )}

@@ -38,7 +38,7 @@ export function HistoryScreen() {
       setEntries(res.data);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했습니다.');
+      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export function HistoryScreen() {
       ) : entries.length === 0 && !error ? (
         <Card>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            아직 기록된 추천이 없습니다. 수집이 실행되면 날짜별로 쌓입니다.
+            아직 기록된 추천이 없어요. 수집이 실행되면 날짜별로 차곡차곡 쌓여요.
           </Text>
         </Card>
       ) : (
@@ -147,7 +147,7 @@ export function HistoryScreen() {
       )}
 
       <Text style={[styles.note, { color: colors.textDisabled }]}>
-        등락률(적중률)은 추천 당시 주가가 기록된 날부터 표시됩니다.
+        등락률(적중률)은 추천 당시 주가가 기록된 날부터 보여드려요.
       </Text>
 
       <StockDetailModal
