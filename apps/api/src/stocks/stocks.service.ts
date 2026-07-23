@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { StockDetail } from '@daily-stocks/shared';
-import { STOCKS } from '../collect/analyzer/dictionaries';
+import { CatalogService } from '../catalog/catalog.service';
 import { NewsService } from '../news/news.service';
 import { PriceService } from '../price/price.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
@@ -16,10 +16,11 @@ export class StocksService {
     private readonly recommendationService: RecommendationService,
     private readonly trendsService: TrendsService,
     private readonly priceService: PriceService,
+    private readonly catalog: CatalogService,
   ) {}
 
   async detail(ticker: string): Promise<StockDetail> {
-    const stock = STOCKS.find((s) => s.ticker === ticker);
+    const stock = this.catalog.find(ticker);
     if (!stock) {
       throw new NotFoundException({
         error: {
@@ -33,7 +34,7 @@ export class StocksService {
       stock: {
         ticker: stock.ticker,
         name: stock.name,
-        sector: stock.sector,
+        sector: stock.sector ?? null,
         market: stock.market,
       },
       recommendation:

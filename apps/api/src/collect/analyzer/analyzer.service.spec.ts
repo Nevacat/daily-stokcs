@@ -1,7 +1,8 @@
+import { CatalogService } from '../../catalog/catalog.service';
 import { AnalyzerService } from './analyzer.service';
 
 describe('AnalyzerService', () => {
-  const analyzer = new AnalyzerService();
+  const analyzer = new AnalyzerService(new CatalogService());
 
   it('종목명이 있으면 티커와 해당 섹터를 매핑한다', () => {
     const result = analyzer.analyze('삼성전자, 3분기 최대 실적 달성');

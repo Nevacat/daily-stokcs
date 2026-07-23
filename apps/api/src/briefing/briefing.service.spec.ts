@@ -7,6 +7,7 @@ import type {
   Sector,
   Sentiment,
 } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 import { NewsService } from '../news/news.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { BriefingService } from './briefing.service';
@@ -45,7 +46,7 @@ function makeService(items: NewsItem[], recs: Recommendation[]) {
   process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'brief-test-'));
   const newsService = new NewsService();
   newsService.upsert(items, NOW);
-  const recService = new RecommendationService();
+  const recService = new RecommendationService(new CatalogService());
   jest.spyOn(recService, 'findAll').mockReturnValue(recs);
   return new BriefingService(newsService, recService);
 }

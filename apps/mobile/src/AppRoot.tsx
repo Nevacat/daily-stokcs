@@ -14,6 +14,7 @@ import {
 } from 'react-native-safe-area-context';
 import { History, Home, Newspaper, Settings } from 'lucide-react-native';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import { CatalogProvider } from './catalog/CatalogContext';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { spacing } from './theme/tokens';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -115,7 +116,9 @@ export function AppRoot() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <Shell />
+          <CatalogProvider>
+            <Shell />
+          </CatalogProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

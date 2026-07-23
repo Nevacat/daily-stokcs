@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Favorites } from '@daily-stocks/shared';
-import { SECTORS, STOCKS } from '@daily-stocks/shared';
+import { SECTORS } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 import { JsonStore } from '../common/json-store';
 
 const EMPTY: Favorites = { tickers: [], sectors: [] };
@@ -8,6 +9,8 @@ const EMPTY: Favorites = { tickers: [], sectors: [] };
 /** 사용자별 관심 종목/섹터 (기획서 §3.1) */
 @Injectable()
 export class FavoritesService {
+  constructor(private readonly catalog: CatalogService) {}
+
   private readonly store = new JsonStore<Record<string, Favorites>>(
     'favorites',
   );
@@ -40,8 +43,7 @@ export class FavoritesService {
     const tickers = [...new Set(input.tickers ?? current.tickers)];
     const sectors = [...new Set(input.sectors ?? current.sectors)];
 
-    const knownTickers = new Set(STOCKS.map((s) => s.ticker));
-    const badTicker = tickers.find((t) => !knownTickers.has(t));
+    const badTicker = tickers.find((t) => !this.catalog.find(t));
     if (badTicker) {
       throw new BadRequestException({
         error: {

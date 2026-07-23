@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { CatalogService } from '../catalog/catalog.service';
 import { FavoritesService } from '../favorites/favorites.service';
 import { HistoryService } from '../history/history.service';
 import { DevicesService } from '../notifications/devices.service';
@@ -21,18 +22,19 @@ function makeService(articles: RawArticle[]) {
   const collector = {
     collect: jest.fn().mockResolvedValue(articles),
   } as unknown as RssCollectorService;
+  const catalog = new CatalogService();
   const newsService = new NewsService();
   const service = new CollectService(
     collector,
-    new AnalyzerService(),
+    new AnalyzerService(catalog),
     newsService,
-    new RecommendationService(),
+    new RecommendationService(catalog),
     new SettingsService(),
     new HistoryService(),
     {
       getPrices: jest.fn().mockResolvedValue(new Map()),
     } as unknown as PriceService,
-    new FavoritesService(),
+    new FavoritesService(catalog),
     new NotificationService(new DevicesService()),
   );
   return { service, newsService };
@@ -90,17 +92,18 @@ describe('CollectService', () => {
     const collector = {
       collect: jest.fn().mockRejectedValue(new Error('network')),
     } as unknown as RssCollectorService;
+    const catalog = new CatalogService();
     const service = new CollectService(
       collector,
-      new AnalyzerService(),
+      new AnalyzerService(catalog),
       new NewsService(),
-      new RecommendationService(),
+      new RecommendationService(catalog),
       new SettingsService(),
       new HistoryService(),
       {
         getPrices: jest.fn().mockResolvedValue(new Map()),
       } as unknown as PriceService,
-      new FavoritesService(),
+      new FavoritesService(catalog),
       new NotificationService(new DevicesService()),
     );
 

@@ -12,11 +12,20 @@ const NAME_BY_TICKER = new Map(STOCKS.map(s => [s.ticker, s.name]));
  * 종목 로고 — 회사 파비콘(키 불필요)을 쓰고,
  * 로드 실패·도메인 없음이면 이니셜 아바타로 폴백한다.
  */
-export function StockLogo({ ticker, size = 32 }: { ticker: string; size?: number }) {
+export function StockLogo({
+  ticker,
+  name: nameProp,
+  size = 32,
+}: {
+  ticker: string;
+  /** 카탈로그 종목 등 큐레이션 밖 종목의 표시 이름 */
+  name?: string;
+  size?: number;
+}) {
   const { colors } = useTheme();
   const [failed, setFailed] = useState(false);
   const domain = DOMAIN_BY_TICKER.get(ticker);
-  const name = NAME_BY_TICKER.get(ticker) ?? ticker;
+  const name = nameProp ?? NAME_BY_TICKER.get(ticker) ?? ticker;
 
   const wrapperStyle = {
     width: size,

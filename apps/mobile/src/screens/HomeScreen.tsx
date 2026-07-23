@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { RefreshCw, Star } from 'lucide-react-native';
+import { RefreshCw, Search, Star } from 'lucide-react-native';
 import type {
   CollectRun,
   DailyBriefing,
@@ -29,6 +29,7 @@ import { Button, Card, Chip, QuoteLine, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 import { RecommendationDetailModal } from './RecommendationDetailModal';
+import { StockSearchModal } from './StockSearchModal';
 
 function RecommendationCard({
   rec,
@@ -117,6 +118,7 @@ export function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -229,6 +231,14 @@ export function HomeScreen() {
               {greeting(user ? user.nickname : undefined)}
             </Text>
           </View>
+          <View style={styles.headerSpacer} />
+          <Pressable
+            onPress={() => setSearchOpen(true)}
+            hitSlop={10}
+            style={[styles.searchButton, { backgroundColor: colors.surface }]}
+          >
+            <Search size={19} color={colors.textSecondary} />
+          </Pressable>
         </View>
 
         {/* 데일리 브리핑 (기획서 §3.4) */}
@@ -340,6 +350,8 @@ export function HomeScreen() {
         recommendationId={detailId}
         onClose={() => setDetailId(null)}
       />
+
+      <StockSearchModal visible={searchOpen} onClose={() => setSearchOpen(false)} />
     </View>
   );
 }
@@ -348,6 +360,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.xl, gap: spacing.lg },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  headerSpacer: { flex: 1 },
+  searchButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   logo: { width: 44, height: 44, borderRadius: 22 },
   title: { fontSize: 22, fontWeight: '800' },
   subtitle: { fontSize: 12 },

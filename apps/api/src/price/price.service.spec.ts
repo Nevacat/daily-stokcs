@@ -1,3 +1,4 @@
+import { CatalogService } from '../catalog/catalog.service';
 import { PriceService } from './price.service';
 
 function yahooResponse(price: number, previousClose: number, currency = 'KRW') {
@@ -27,7 +28,7 @@ describe('PriceService (Yahoo 시세)', () => {
     String((fetchMock.mock.calls as unknown as [string][])[i][0]);
 
   beforeEach(() => {
-    service = new PriceService();
+    service = new PriceService(new CatalogService());
     fetchMock = jest.fn().mockResolvedValue(yahooResponse(270000, 260000));
     // 외부 API는 목 처리 (rules/testing.md — 실제 API 호출 금지)
     global.fetch = fetchMock;

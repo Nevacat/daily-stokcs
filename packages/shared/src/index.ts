@@ -114,9 +114,36 @@ export interface PriceChart {
   points: { t: string; price: number }[];
 }
 
+/** 전체 상장사 카탈로그 항목 (서버가 KRX에서 일 1회 갱신) */
+export interface CatalogStock {
+  ticker: string;
+  name: string;
+  market: Market;
+  exchange?: 'KOSPI' | 'KOSDAQ';
+  /** 8개 섹터로 매핑 안 되는 종목은 없음 — 추천 대상에서 제외되지만 검색·시세는 가능 */
+  sector?: Sector;
+  /** KRX 업종명 (원본) */
+  industry?: string;
+  domain?: string;
+  aliases?: string[];
+}
+
+/** 앱 검색용 경량 카탈로그 항목 */
+export interface CatalogStockLite {
+  ticker: string;
+  name: string;
+  market: Market;
+}
+
 /** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
 export interface StockDetail {
-  stock: { ticker: string; name: string; sector: Sector; market: Market };
+  stock: {
+    ticker: string;
+    name: string;
+    /** 섹터 미분류 종목은 null */
+    sector: Sector | null;
+    market: Market;
+  };
   /** 현재 추천 중이 아니면 null */
   recommendation: Recommendation | null;
   /** 시세 조회 실패 시 null */
