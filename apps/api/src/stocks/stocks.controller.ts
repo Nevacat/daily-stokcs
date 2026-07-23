@@ -7,7 +7,9 @@ export class StocksController {
   constructor(private readonly stocksService: StocksService) {}
 
   @Get(':ticker')
-  detail(@Param('ticker') ticker: string): ApiResponse<StockDetail> {
-    return { data: this.stocksService.detail(ticker) };
+  async detail(
+    @Param('ticker') ticker: string,
+  ): Promise<ApiResponse<StockDetail>> {
+    return { data: await this.stocksService.detail(ticker) };
   }
 }

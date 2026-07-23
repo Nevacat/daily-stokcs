@@ -33,7 +33,9 @@ describe('CollectService 스케줄러', () => {
       new RecommendationService(),
       settings,
       new HistoryService(),
-      new PriceService(),
+      {
+        getPrices: jest.fn().mockResolvedValue(new Map()),
+      } as unknown as PriceService,
       new FavoritesService(),
       new NotificationService(new DevicesService()),
     );

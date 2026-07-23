@@ -147,7 +147,7 @@ export function HistoryScreen() {
       )}
 
       <Text style={[styles.note, { color: colors.textDisabled }]}>
-        추천 시점 대비 등락률(적중률)은 곧 업데이트로 제공될 예정입니다.
+        등락률(적중률)은 추천 당시 주가가 기록된 날부터 표시됩니다.
       </Text>
 
       <StockDetailModal

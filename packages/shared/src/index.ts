@@ -79,11 +79,24 @@ export interface CollectRun {
   newsCount: number;
 }
 
+/** 실시간(지연) 시세 — Yahoo Finance 기반, 키 불필요 */
+export interface StockQuote {
+  ticker: string;
+  price: number;
+  previousClose: number;
+  /** 전일 종가 대비 등락률(%) */
+  changePct: number;
+  currency: string; // KRW | USD
+  at: string; // ISO 8601 UTC
+}
+
 /** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
 export interface StockDetail {
   stock: { ticker: string; name: string; sector: Sector; market: Market };
   /** 현재 추천 중이 아니면 null */
   recommendation: Recommendation | null;
+  /** 시세 조회 실패 시 null */
+  quote: StockQuote | null;
   trend: SentimentTrend;
   /** 관련 뉴스 최신순 */
   news: NewsItem[];

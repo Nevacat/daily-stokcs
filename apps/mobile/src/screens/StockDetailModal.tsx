@@ -12,7 +12,7 @@ import type { StockDetail } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { TrendChart } from '../components/TrendChart';
-import { Card, ScorePill, SentimentBadge } from '../components/ui';
+import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 
@@ -75,6 +75,7 @@ export function StockDetailModal({
                       {MARKET_LABELS[detail.stock.market]} ·{' '}
                       {SECTOR_LABELS[detail.stock.sector]} · {detail.stock.ticker}
                     </Text>
+                    {detail.quote && <QuoteLine quote={detail.quote} size={15} />}
                   </View>
                   {detail.recommendation && (
                     <ScorePill score={detail.recommendation.score} />

@@ -8,7 +8,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import type { Sentiment } from '@daily-stocks/shared';
+import type { Sentiment, StockQuote } from '@daily-stocks/shared';
+import { formatPrice } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -160,6 +161,31 @@ export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
         {SENTIMENT_META[sentiment].label}
       </Text>
     </View>
+  );
+}
+
+/** 시세 한 줄: 가격 + 전일 대비 등락률 (국내 관례: 상승 빨강 ▲ / 하락 파랑 ▼) */
+export function QuoteLine({
+  quote,
+  size = 13,
+}: {
+  quote: StockQuote;
+  size?: number;
+}) {
+  const { colors } = useTheme();
+  const up = quote.changePct > 0;
+  const flat = quote.changePct === 0;
+  const changeColor = flat ? colors.textSecondary : up ? colors.danger : colors.primary;
+  return (
+    <Text style={{ fontSize: size }}>
+      <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>
+        {formatPrice(quote)}
+      </Text>
+      <Text style={{ color: changeColor, fontWeight: '600' }}>
+        {'  '}
+        {flat ? '—' : up ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(2)}%
+      </Text>
+    </Text>
   );
 }
 
