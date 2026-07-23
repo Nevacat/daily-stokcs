@@ -15,24 +15,27 @@ import type {
   Market,
   Recommendation,
   Sector,
+  StockQuote,
 } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
 import { BriefingCard } from '../components/BriefingCard';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
-import { Button, Card, Chip, ScorePill } from '../components/ui';
+import { Button, Card, Chip, QuoteLine, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 import { RecommendationDetailModal } from './RecommendationDetailModal';
 
 function RecommendationCard({
   rec,
+  quote,
   favorite,
   onPress,
   onToggleFavorite,
 }: {
   rec: Recommendation;
+  quote: StockQuote | null;
   favorite: boolean;
   onPress: () => void;
   onToggleFavorite: () => void;
@@ -60,6 +63,7 @@ function RecommendationCard({
           <Text style={[styles.sectorLine, { color: colors.indigo }]}>
             {SECTOR_LABELS[rec.sector]} · 근거 뉴스 {rec.newsIds.length}건
           </Text>
+          {quote && <QuoteLine quote={quote} />}
           <Text
             style={[styles.reason, { color: colors.textSecondary }]}
             numberOfLines={2}
@@ -76,6 +80,7 @@ function RecommendationCard({
 export function HomeScreen() {
   const { colors } = useTheme();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [quotes, setQuotes] = useState<Record<string, StockQuote | null>>({});
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [favoriteTickers, setFavoriteTickers] = useState<string[]>([]);
   const [sector, setSector] = useState<Sector | null>(null);
@@ -102,6 +107,13 @@ export function HomeScreen() {
       setFavoriteTickers(favorites.data.tickers);
       setBriefing(brief.data);
       setError(null);
+      // 시세는 부가 정보 — 실패해도 추천 표시에는 영향 없음
+      if (recs.data.length > 0) {
+        api
+          .quotes(recs.data.map(r => r.ticker))
+          .then(q => setQuotes(q.data))
+          .catch(() => {});
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '서버에 연결할 수 없습니다.');
     } finally {
@@ -158,6 +170,7 @@ export function HomeScreen() {
     <RecommendationCard
       key={rec.id}
       rec={rec}
+      quote={quotes[rec.ticker] ?? null}
       favorite={favoriteTickers.includes(rec.ticker)}
       onPress={() => setDetailId(rec.id)}
       onToggleFavorite={() => void toggleFavorite(rec.ticker)}

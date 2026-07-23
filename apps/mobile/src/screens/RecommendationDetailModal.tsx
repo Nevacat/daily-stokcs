@@ -13,11 +13,12 @@ import type {
   NewsItem,
   Recommendation,
   SentimentTrend,
+  StockQuote,
 } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { TrendChart } from '../components/TrendChart';
-import { Card, ScorePill, SentimentBadge } from '../components/ui';
+import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -33,22 +34,29 @@ export function RecommendationDetailModal({
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [evidence, setEvidence] = useState<NewsItem[]>([]);
   const [trend, setTrend] = useState<SentimentTrend | null>(null);
+  const [quote, setQuote] = useState<StockQuote | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!recommendationId) return;
     setRecommendation(null);
     setTrend(null);
+    setQuote(null);
     setError(null);
     api
       .recommendationDetail(recommendationId)
       .then(res => {
         setRecommendation(res.data.recommendation);
         setEvidence(res.data.evidence);
-        // 트렌드는 부가 정보 — 실패해도 상세는 그대로 보여준다
+        // 트렌드·시세는 부가 정보 — 실패해도 상세는 그대로 보여준다
+        const ticker = res.data.recommendation.ticker;
         api
-          .tickerTrend(res.data.recommendation.ticker)
+          .tickerTrend(ticker)
           .then(t => setTrend(t.data))
+          .catch(() => {});
+        api
+          .quotes([ticker])
+          .then(q => setQuote(q.data[ticker] ?? null))
           .catch(() => {});
       })
       .catch(e =>
@@ -116,6 +124,7 @@ export function RecommendationDetailModal({
                     <Text style={{ color: colors.indigo, fontSize: 12, fontWeight: '600' }}>
                       {SECTOR_LABELS[recommendation.sector]} · {recommendation.ticker}
                     </Text>
+                    {quote && <QuoteLine quote={quote} size={15} />}
                     <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
                       추천 시각 {formatKst(recommendation.recommendedAt)}
                     </Text>

@@ -13,6 +13,7 @@ import type {
   Sentiment,
   SentimentTrend,
   StockDetail,
+  StockQuote,
   UserProfile,
 } from '@daily-stocks/shared';
 
@@ -59,6 +60,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error('서버 응답을 해석할 수 없습니다.');
   }
   return body as T;
+}
+
+/** 시세 가격 표시 — KRW는 원화, USD는 달러 */
+export function formatPrice(quote: StockQuote): string {
+  if (quote.currency === 'USD') return `$${quote.price.toFixed(2)}`;
+  return `${Math.round(quote.price).toLocaleString('ko-KR')}원`;
 }
 
 /** 외부 링크는 http(s)만 연다 (피드 오염 시 tel:/sms: 등 임의 스킴 방어) */
@@ -119,6 +126,11 @@ export const api = {
   },
 
   briefing: () => request<ApiResponse<DailyBriefing>>('/briefing'),
+
+  quotes: (tickers: string[]) =>
+    request<ApiResponse<Record<string, StockQuote | null>>>(
+      `/quotes?tickers=${encodeURIComponent(tickers.join(','))}`,
+    ),
 
   stockDetail: (ticker: string) =>
     request<ApiResponse<StockDetail>>(`/stocks/${encodeURIComponent(ticker)}`),

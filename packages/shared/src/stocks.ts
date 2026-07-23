@@ -6,6 +6,8 @@ export interface StockEntry {
   sector: Sector;
   /** KR = 국내(KRX 6자리), US = 미국(심볼) */
   market: Market;
+  /** 국내 종목 거래소 (기본 KOSPI) — 시세 심볼 매핑용 */
+  exchange?: 'KOSPI' | 'KOSDAQ';
   /** 기사에서 이 종목을 가리키는 표현들 */
   aliases: string[];
 }
@@ -51,6 +53,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '247540',
+    exchange: 'KOSDAQ',
     name: '에코프로비엠',
     sector: 'battery',
     market: 'KR',
@@ -73,6 +76,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '196170',
+    exchange: 'KOSDAQ',
     name: '알테오젠',
     sector: 'bio_healthcare',
     market: 'KR',
@@ -132,6 +136,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '035900',
+    exchange: 'KOSDAQ',
     name: 'JYP엔터',
     sector: 'entertainment',
     market: 'KR',
@@ -139,6 +144,7 @@ export const STOCKS: StockEntry[] = [
   },
   {
     ticker: '041510',
+    exchange: 'KOSDAQ',
     name: '에스엠',
     sector: 'entertainment',
     market: 'KR',
