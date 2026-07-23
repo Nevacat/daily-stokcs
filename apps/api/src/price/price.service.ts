@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { ChartRange, PriceChart, StockQuote } from '@daily-stocks/shared';
-import { STOCKS } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 
 const CACHE_TTL_MS = 5 * 60_000; // 시세 캐시 5분 (무료 소스 과호출 방지)
 
@@ -35,12 +35,14 @@ const RANGE_PARAMS: Record<ChartRange, { range: string; interval: string }> = {
  */
 @Injectable()
 export class PriceService {
+  constructor(private readonly catalog: CatalogService) {}
+
   private readonly logger = new Logger(PriceService.name);
   private readonly cache = new Map<string, CacheEntry>();
 
   /** Yahoo 심볼 매핑: 국내는 .KS(코스피)/.KQ(코스닥), 미국은 심볼 그대로 */
   private yahooSymbol(ticker: string): string | null {
-    const stock = STOCKS.find((s) => s.ticker === ticker);
+    const stock = this.catalog.find(ticker);
     if (!stock) return null;
     if (stock.market === 'US') return ticker;
     return `${ticker}.${stock.exchange === 'KOSDAQ' ? 'KQ' : 'KS'}`;

@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { NotFoundException } from '@nestjs/common';
 import type { ApiError, NewsItem, Sentiment } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 import { RecommendationService } from './recommendation.service';
 
 const NOW = new Date('2026-07-22T09:00:00.000Z');
@@ -27,7 +28,7 @@ describe('RecommendationService', () => {
 
   beforeEach(() => {
     process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'reco-test-'));
-    service = new RecommendationService();
+    service = new RecommendationService(new CatalogService());
   });
 
   it('뉴스 0건이면 추천도 0건', () => {

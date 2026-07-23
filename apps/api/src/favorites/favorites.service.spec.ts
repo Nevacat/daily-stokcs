@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { BadRequestException } from '@nestjs/common';
+import { CatalogService } from '../catalog/catalog.service';
 import { FavoritesService } from './favorites.service';
 
 const U1 = 'user-1';
@@ -12,7 +13,7 @@ describe('FavoritesService (사용자별)', () => {
 
   beforeEach(() => {
     process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'fav-test-'));
-    service = new FavoritesService();
+    service = new FavoritesService(new CatalogService());
   });
 
   it('초기 상태는 빈 관심 목록', () => {
@@ -70,6 +71,8 @@ describe('FavoritesService (사용자별)', () => {
 
   it('저장 후 새 인스턴스에서도 유지된다 (파일 영속성)', () => {
     service.toggleTicker(U1, '005930');
-    expect(new FavoritesService().get(U1).tickers).toEqual(['005930']);
+    expect(new FavoritesService(new CatalogService()).get(U1).tickers).toEqual([
+      '005930',
+    ]);
   });
 });

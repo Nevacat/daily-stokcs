@@ -1,17 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import type { Sector, Sentiment } from '@daily-stocks/shared';
+import type { CatalogStock, Sector, Sentiment } from '@daily-stocks/shared';
+import { CatalogService } from '../../catalog/catalog.service';
 import {
   NEGATIVE_KEYWORDS,
   POSITIVE_KEYWORDS,
   SECTOR_KEYWORDS,
-  STOCKS,
-  StockEntry,
 } from './dictionaries';
 
 export interface AnalyzedArticle {
   sectors: Sector[];
   /** 매칭된 종목들 */
-  stocks: StockEntry[];
+  stocks: CatalogStock[];
   sentiment: Sentiment;
   /** 감성 강도: 매칭된 키워드 수 (양수=호재, 음수=악재) */
   polarity: number;
@@ -40,14 +39,20 @@ function matches(lowerTitle: string, keyword: string): boolean {
  */
 @Injectable()
 export class AnalyzerService {
+  constructor(private readonly catalog: CatalogService) {}
+
   analyze(title: string): AnalyzedArticle {
     const lower = title.toLowerCase();
 
-    const stocks = STOCKS.filter((s) =>
-      s.aliases.some((a) => matches(lower, a)),
-    );
+    // 큐레이션 종목은 별칭으로, 그 외 전체 상장사는 공식명(3자 이상)으로 매칭
+    const stocks = this.catalog.list().filter((s) => {
+      const aliases = s.aliases ?? (s.name.length >= 3 ? [s.name] : []);
+      return aliases.some((a) => matches(lower, a));
+    });
 
-    const sectors = new Set<Sector>(stocks.map((s) => s.sector));
+    const sectors = new Set<Sector>(
+      stocks.flatMap((s) => (s.sector ? [s.sector] : [])),
+    );
     for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
       if (keywords.some((k) => matches(lower, k)))
         sectors.add(sector as Sector);

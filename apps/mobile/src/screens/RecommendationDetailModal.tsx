@@ -119,7 +119,7 @@ export function RecommendationDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
-                  <StockLogo ticker={recommendation.ticker} size={40} />
+                  <StockLogo ticker={recommendation.ticker} name={recommendation.stockName} size={40} />
                   <View style={{ gap: 4, flex: 1 }}>
                     <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: '800' }}>
                       {recommendation.stockName}
