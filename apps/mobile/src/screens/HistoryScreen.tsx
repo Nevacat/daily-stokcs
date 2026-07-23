@@ -147,8 +147,7 @@ export function HistoryScreen() {
       )}
 
       <Text style={[styles.note, { color: colors.textDisabled }]}>
-        추천 시점 대비 등락률은 서버에 주가 API 키(apps/api/.env의 KIS_APP_KEY)를
-        설정하면 표시됩니다.
+        추천 시점 대비 등락률(적중률)은 곧 업데이트로 제공될 예정입니다.
       </Text>
 
       <StockDetailModal
