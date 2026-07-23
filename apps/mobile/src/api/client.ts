@@ -2,6 +2,8 @@ import { Linking, Platform } from 'react-native';
 import type {
   ApiResponse,
   AuthResponse,
+  ChartRange,
+  PriceChart,
   CollectRun,
   CollectSettings,
   DailyBriefing,
@@ -126,6 +128,11 @@ export const api = {
   },
 
   briefing: () => request<ApiResponse<DailyBriefing>>('/briefing'),
+
+  priceChart: (ticker: string, range: ChartRange) =>
+    request<ApiResponse<PriceChart | null>>(
+      `/quotes/chart?ticker=${encodeURIComponent(ticker)}&range=${range}`,
+    ),
 
   quotes: (tickers: string[]) =>
     request<ApiResponse<Record<string, StockQuote | null>>>(

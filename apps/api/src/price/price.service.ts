@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { StockQuote } from '@daily-stocks/shared';
+import type { ChartRange, PriceChart, StockQuote } from '@daily-stocks/shared';
 import { STOCKS } from '@daily-stocks/shared';
 
 const CACHE_TTL_MS = 5 * 60_000; // 시세 캐시 5분 (무료 소스 과호출 방지)
@@ -8,6 +8,15 @@ interface CacheEntry {
   quote: StockQuote | null;
   at: number;
 }
+
+/** 구간별 Yahoo range/interval 매핑 */
+const RANGE_PARAMS: Record<ChartRange, { range: string; interval: string }> = {
+  '1d': { range: '1d', interval: '5m' },
+  '1w': { range: '5d', interval: '30m' },
+  '1m': { range: '1mo', interval: '1d' },
+  '3m': { range: '3mo', interval: '1d' },
+  '1y': { range: '1y', interval: '1wk' },
+};
 
 /**
  * 주가 시세 서비스.
@@ -94,6 +103,69 @@ export class PriceService {
     }
     this.cache.set(ticker, { quote, at: Date.now() });
     return quote;
+  }
+
+  private readonly chartCache = new Map<
+    string,
+    { chart: PriceChart | null; at: number }
+  >();
+
+  /** 주가 차트 조회 (구간별, 5분 캐시). 실패·미등록 종목은 null */
+  async getChart(
+    ticker: string,
+    range: ChartRange,
+  ): Promise<PriceChart | null> {
+    const key = `${ticker}:${range}`;
+    const cached = this.chartCache.get(key);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.chart;
+
+    let chart: PriceChart | null = null;
+    try {
+      const symbol = this.yahooSymbol(ticker);
+      if (symbol) {
+        const params = RANGE_PARAMS[range];
+        const res = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${params.range}&interval=${params.interval}`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' } },
+        );
+        if (res.ok) {
+          const body = (await res.json()) as {
+            chart?: {
+              result?: {
+                meta?: { currency?: string; chartPreviousClose?: number };
+                timestamp?: number[];
+                indicators?: { quote?: { close?: (number | null)[] }[] };
+              }[];
+            };
+          };
+          const result = body.chart?.result?.[0];
+          const timestamps = result?.timestamp ?? [];
+          const closes = result?.indicators?.quote?.[0]?.close ?? [];
+          const points = timestamps
+            .map((t, i) => ({ t, price: closes[i] }))
+            .filter((p): p is { t: number; price: number } =>
+              Number.isFinite(p.price),
+            )
+            .map((p) => ({
+              t: new Date(p.t * 1000).toISOString(),
+              price: p.price,
+            }));
+          if (points.length > 1) {
+            chart = {
+              ticker,
+              currency: result?.meta?.currency ?? 'KRW',
+              range,
+              previousClose: result?.meta?.chartPreviousClose ?? null,
+              points,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`차트 조회 실패 (${ticker}, ${range}): ${String(e)}`);
+    }
+    this.chartCache.set(key, { chart, at: Date.now() });
+    return chart;
   }
 
   /** 여러 종목 시세 일괄 조회 (중복 제거) */

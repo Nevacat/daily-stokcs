@@ -69,6 +69,45 @@ describe('PriceService (Yahoo 시세)', () => {
     expect(await service.getQuote('005930')).toBeNull();
   });
 
+  it('차트: 구간 매핑·null 종가 필터·기준선을 담아 반환한다', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          chart: {
+            result: [
+              {
+                meta: { currency: 'KRW', chartPreviousClose: 260000 },
+                timestamp: [1784800000, 1784800300, 1784800600],
+                indicators: { quote: [{ close: [265000, null, 270000] }] },
+              },
+            ],
+          },
+        }),
+    });
+    const chart = await service.getChart('005930', '1d');
+    expect(calledUrl(0)).toContain('005930.KS');
+    expect(calledUrl(0)).toContain('range=1d&interval=5m');
+    expect(chart?.points).toHaveLength(2); // null 종가 제외
+    expect(chart?.previousClose).toBe(260000);
+  });
+
+  it('차트: 포인트가 1개 이하면 null, 캐시는 구간별로 분리된다', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          chart: {
+            result: [{ timestamp: [], indicators: { quote: [{ close: [] }] } }],
+          },
+        }),
+    });
+    expect(await service.getChart('005930', '1d')).toBeNull();
+    await service.getChart('005930', '1m'); // 다른 구간은 새로 조회
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(calledUrl(1)).toContain('range=1mo&interval=1d');
+  });
+
   it('getPrices는 중복 티커를 한 번만 조회한다', async () => {
     const prices = await service.getPrices(['005930', '005930', 'NVDA']);
     expect(fetchMock).toHaveBeenCalledTimes(2);
