@@ -13,6 +13,7 @@ import { MARKET_LABELS, SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
+import { StockLogo } from '../components/StockLogo';
 import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -68,6 +69,7 @@ export function StockDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
+                  <StockLogo ticker={detail.stock.ticker} size={40} />
                   <View style={styles.stockInfo}>
                     <Text style={[styles.stockName, { color: colors.textPrimary }]}>
                       {detail.stock.name}

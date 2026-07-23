@@ -112,6 +112,7 @@ export class CollectService implements OnModuleInit, OnModuleDestroy {
           sectors: result.sectors,
           tickers: result.stocks.map((s) => s.ticker),
           sentiment: result.sentiment,
+          imageUrl: article.image,
         };
       });
 

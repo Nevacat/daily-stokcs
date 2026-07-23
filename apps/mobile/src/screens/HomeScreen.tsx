@@ -21,6 +21,8 @@ import { MARKET_LABELS, SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { BriefingCard } from '../components/BriefingCard';
+import { StockLogo } from '../components/StockLogo';
+import { SECTOR_ICONS } from '../components/sectorIcons';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, QuoteLine, ScorePill } from '../components/ui';
@@ -47,6 +49,7 @@ function RecommendationCard({
       <View style={styles.rowBetween}>
         <View style={styles.cardBody}>
           <View style={styles.row}>
+            <StockLogo ticker={rec.ticker} size={28} />
             <Text style={[styles.stockName, { color: colors.textPrimary }]}>
               {rec.stockName}
             </Text>
@@ -302,6 +305,7 @@ export function HomeScreen() {
               label={SECTOR_LABELS[s]}
               active={sector === s}
               onPress={() => setSector(s)}
+              Icon={SECTOR_ICONS[s]}
             />
           ))}
         </ScrollView>

@@ -44,6 +44,8 @@ export interface NewsItem {
   sectors: Sector[];
   tickers: string[];
   sentiment: Sentiment;
+  /** 기사 썸네일 (RSS 제공 시) */
+  imageUrl?: string;
 }
 
 export interface Recommendation {
