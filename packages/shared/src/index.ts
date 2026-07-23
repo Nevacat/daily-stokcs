@@ -90,6 +90,28 @@ export interface StockQuote {
   at: string; // ISO 8601 UTC
 }
 
+/** 주가 차트 구간 */
+export const CHART_RANGES = ['1d', '1w', '1m', '3m', '1y'] as const;
+export type ChartRange = (typeof CHART_RANGES)[number];
+
+export const CHART_RANGE_LABELS: Record<ChartRange, string> = {
+  '1d': '1일',
+  '1w': '1주',
+  '1m': '1달',
+  '3m': '3달',
+  '1y': '1년',
+};
+
+/** 주가 차트 데이터 (Yahoo 기반, 15~20분 지연) */
+export interface PriceChart {
+  ticker: string;
+  currency: string;
+  range: ChartRange;
+  /** 1d 기준선(전일 종가). 그 외 구간은 첫 포인트 기준 */
+  previousClose: number | null;
+  points: { t: string; price: number }[];
+}
+
 /** 종목 상세 (§4 IA — 뉴스·히스토리에서 진입하는 독립 상세) */
 export interface StockDetail {
   stock: { ticker: string; name: string; sector: Sector; market: Market };

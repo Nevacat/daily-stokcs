@@ -11,6 +11,7 @@ import { ExternalLink, X } from 'lucide-react-native';
 import type { StockDetail } from '@daily-stocks/shared';
 import { MARKET_LABELS, SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
 import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
@@ -82,6 +83,14 @@ export function StockDetailModal({
                   )}
                 </View>
               </Card>
+
+              {/* 주가 차트 (토스 스타일, 구간 선택) */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  주가 차트
+                </Text>
+                <PriceChartCard ticker={detail.stock.ticker} />
+              </View>
 
               {detail.recommendation ? (
                 <View style={styles.section}>
