@@ -19,6 +19,7 @@ import { SECTOR_LABELS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
 import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
+import { StockLogo } from '../components/StockLogo';
 import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
@@ -118,6 +119,7 @@ export function RecommendationDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
+                  <StockLogo ticker={recommendation.ticker} size={40} />
                   <View style={{ gap: 4, flex: 1 }}>
                     <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: '800' }}>
                       {recommendation.stockName}

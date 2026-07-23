@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
 import type { DailyBriefing } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
+import { StockLogo } from './StockLogo';
 import { Card } from './ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
@@ -52,6 +53,7 @@ export function BriefingCard({
               onPress={() => onPressPick(pick.id)}
               style={[styles.pick, { backgroundColor: colors.card }]}
             >
+              <StockLogo ticker={pick.ticker} size={24} />
               <Text style={[styles.pickName, { color: colors.textPrimary }]}>
                 {pick.stockName}
               </Text>

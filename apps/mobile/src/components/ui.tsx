@@ -104,17 +104,20 @@ export function Button({
   );
 }
 
-/** 알약형 선택 칩 (섹터/필터/설정 공용) */
+/** 알약형 선택 칩 (섹터/필터/설정 공용) — 아이콘 옵션 지원 */
 export function Chip({
   label,
   active,
   onPress,
+  Icon,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  Icon?: React.ComponentType<{ size?: number; color?: string }>;
 }) {
   const { colors } = useTheme();
+  const textColor = active ? colors.primary : colors.textSecondary;
   // 토스 스타일: 선택 상태도 원색 채움 대신 옅은 블루 배경 + 블루 텍스트
   return (
     <Pressable
@@ -127,9 +130,10 @@ export function Chip({
         },
       ]}
     >
+      {Icon && <Icon size={13} color={textColor} />}
       <Text
         style={{
-          color: active ? colors.primary : colors.textSecondary,
+          color: textColor,
           fontSize: 13,
           fontWeight: active ? '700' : '500',
         }}
@@ -214,6 +218,9 @@ const styles = StyleSheet.create({
   },
   buttonText: { fontSize: 15, fontWeight: '700' },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     borderRadius: radius.chip,
     borderWidth: 1,
     paddingVertical: 8,

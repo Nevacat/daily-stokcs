@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +16,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
+import { SECTOR_ICONS } from '../components/sectorIcons';
 import { StockDetailModal } from './StockDetailModal';
 
 const STOCK_NAMES = new Map(STOCKS.map(s => [s.ticker, s.name]));
@@ -100,6 +102,7 @@ export function NewsScreen() {
               label={SECTOR_LABELS[s]}
               active={sector === s}
               onPress={() => setSector(sector === s ? null : s)}
+              Icon={SECTOR_ICONS[s]}
             />
           ))}
         </ScrollView>
@@ -180,14 +183,24 @@ export function NewsScreen() {
                 </Pressable>
               ))}
             </View>
-            <Text
-              style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', lineHeight: 20 }}
-            >
-              {item.title}
-            </Text>
-            <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
-              {item.press} · {formatKst(item.publishedAt)}
-            </Text>
+            <View style={styles.newsBody}>
+              <View style={styles.newsTextCol}>
+                <Text
+                  style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '600', lineHeight: 20 }}
+                >
+                  {item.title}
+                </Text>
+                <Text style={{ color: colors.textDisabled, fontSize: 11 }}>
+                  {item.press} · {formatKst(item.publishedAt)}
+                </Text>
+              </View>
+              {item.imageUrl && (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={[styles.thumbnail, { backgroundColor: colors.surface }]}
+                />
+              )}
+            </View>
           </Card>
         )}
       />
@@ -204,4 +217,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800' },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   skeletons: { gap: spacing.md },
+  newsBody: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  newsTextCol: { flex: 1, gap: 6 },
+  thumbnail: { width: 64, height: 64, borderRadius: 12 },
 });
