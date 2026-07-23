@@ -50,7 +50,7 @@ function RecommendationCard({
       <View style={styles.rowBetween}>
         <View style={styles.cardBody}>
           <View style={styles.row}>
-            <StockLogo ticker={rec.ticker} size={28} />
+            <StockLogo ticker={rec.ticker} name={rec.stockName} size={28} />
             <Text style={[styles.stockName, { color: colors.textPrimary }]}>
               {rec.stockName}
             </Text>
