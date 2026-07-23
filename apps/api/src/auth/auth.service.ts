@@ -76,7 +76,7 @@ export class AuthService {
         throw new ForbiddenException({
           error: {
             code: 'TERMS_REQUIRED',
-            message: '서비스 이용약관 및 개인정보 처리방침 동의가 필요합니다.',
+            message: '서비스 이용약관과 개인정보 처리방침에 동의해주세요.',
           },
         });
       }

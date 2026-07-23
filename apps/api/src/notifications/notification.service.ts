@@ -34,7 +34,7 @@ export class NotificationService {
     const devices = this.devicesService.list();
     const names = recommendations.map((r) => r.stockName).join(', ');
     const title = '관심 종목 새 추천';
-    const body = `${names} — 새로운 추천이 도착했습니다.`;
+    const body = `${names} — 새로운 추천이 도착했어요.`;
 
     if (!this.enabled || devices.length === 0) {
       this.logger.log(

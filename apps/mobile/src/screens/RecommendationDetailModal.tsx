@@ -61,7 +61,7 @@ export function RecommendationDetailModal({
           .catch(() => {});
       })
       .catch(e =>
-        setError(e instanceof Error ? e.message : '상세를 불러오지 못했습니다.'),
+        setError(e instanceof Error ? e.message : '상세를 불러오지 못했어요.'),
       );
   }, [recommendationId]);
 
@@ -76,7 +76,7 @@ export function RecommendationDetailModal({
       `[DeTok] ${recommendation.stockName} (${recommendation.ticker}) — 종합 ${recommendation.score}점`,
       recommendation.reason,
       evidenceLines ? `근거 뉴스\n${evidenceLines}` : null,
-      '※ 본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.',
+      '※ DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.',
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -191,7 +191,7 @@ export function RecommendationDetailModal({
               </View>
 
               <Text style={[styles.disclaimer, { color: colors.textDisabled }]}>
-                본 정보는 투자 참고용이며, 투자 판단의 책임은 이용자에게 있습니다.
+                DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.
               </Text>
             </>
           )}

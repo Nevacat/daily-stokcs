@@ -55,11 +55,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       'error' in body &&
       typeof (body as { error: { message?: unknown } }).error?.message === 'string'
         ? (body as { error: { message: string } }).error.message
-        : `요청 실패 (${res.status})`;
+        : `요청이 실패했어요 (${res.status})`;
     throw new Error(message);
   }
   if (body === null) {
-    throw new Error('서버 응답을 해석할 수 없습니다.');
+    throw new Error('서버 응답을 읽지 못했어요.');
   }
   return body as T;
 }

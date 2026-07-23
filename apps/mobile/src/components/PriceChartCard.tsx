@@ -81,7 +81,7 @@ export function PriceChartCard({ ticker }: { ticker: string }) {
         <Skeleton height={CHART_HEIGHT} />
       ) : !rendered ? (
         <Text style={[styles.empty, { color: colors.textSecondary }]}>
-          차트 데이터를 불러오지 못했어요.
+          차트를 불러오지 못했어요. 잠시 후 다시 볼까요?
         </Text>
       ) : (
         <>
