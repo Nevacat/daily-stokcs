@@ -178,8 +178,8 @@ export function SettingsScreen() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>알림</Text>
         <Card>
           <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 19 }}>
-            관심 종목에 새 추천이 생기면 푸시로 알려드립니다. Firebase 키 설정
-            후 활성화됩니다 (설정 방법: apps/mobile/src/push/README.md).
+            관심 종목에 새 추천이 생기면 푸시로 알려드립니다. 곧 업데이트로
+            제공될 예정입니다.
           </Text>
         </Card>
       </View>

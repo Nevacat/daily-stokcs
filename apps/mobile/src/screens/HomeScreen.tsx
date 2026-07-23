@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.xl, gap: spacing.lg },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  logo: { width: 44, height: 44, borderRadius: 12 },
+  logo: { width: 44, height: 44, borderRadius: 22 },
   title: { fontSize: 22, fontWeight: '800' },
   subtitle: { fontSize: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
