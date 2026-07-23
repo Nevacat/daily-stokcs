@@ -53,7 +53,7 @@ export function BriefingCard({
               onPress={() => onPressPick(pick.id)}
               style={[styles.pick, { backgroundColor: colors.card }]}
             >
-              <StockLogo ticker={pick.ticker} size={24} />
+              <StockLogo ticker={pick.ticker} name={pick.stockName} size={24} />
               <Text style={[styles.pickName, { color: colors.textPrimary }]}>
                 {pick.stockName}
               </Text>
