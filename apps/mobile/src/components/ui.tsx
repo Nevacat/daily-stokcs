@@ -25,7 +25,7 @@ export function Card({
 }>) {
   const { colors } = useTheme();
   const base: ViewStyle = {
-    backgroundColor: selected ? colors.surface : colors.card,
+    backgroundColor: selected ? colors.primarySoft : colors.card,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
@@ -114,20 +114,21 @@ export function Chip({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
+  // 토스 스타일: 선택 상태도 원색 채움 대신 옅은 블루 배경 + 블루 텍스트
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.chip,
         {
-          backgroundColor: active ? colors.primary : colors.surface,
-          borderColor: active ? colors.primary : colors.border,
+          backgroundColor: active ? colors.primarySoft : colors.surface,
+          borderColor: active ? colors.primarySoft : colors.border,
         },
       ]}
     >
       <Text
         style={{
-          color: active ? '#FFFFFF' : colors.textSecondary,
+          color: active ? colors.primary : colors.textSecondary,
           fontSize: 13,
           fontWeight: active ? '700' : '500',
         }}
@@ -166,11 +167,11 @@ export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
 export function ScorePill({ score }: { score: number }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.score, { backgroundColor: colors.surface }]}>
+    <View style={[styles.score, { backgroundColor: colors.primarySoft }]}>
       <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 16 }}>
         {score}
       </Text>
-      <Text style={{ color: colors.textDisabled, fontSize: 10 }}>점</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>점</Text>
     </View>
   );
 }
