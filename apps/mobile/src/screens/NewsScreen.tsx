@@ -9,8 +9,9 @@ import {
   View,
 } from 'react-native';
 import type { NewsItem, Sector, Sentiment } from '@daily-stocks/shared';
-import { SECTOR_LABELS, SECTORS, STOCKS } from '@daily-stocks/shared';
+import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api, formatKst, openExternalUrl } from '../api/client';
+import { useCatalog } from '../catalog/CatalogContext';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
 import { Button, Card, Chip, SentimentBadge } from '../components/ui';
@@ -18,8 +19,6 @@ import { useTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/tokens';
 import { SECTOR_ICONS } from '../components/sectorIcons';
 import { StockDetailModal } from './StockDetailModal';
-
-const STOCK_NAMES = new Map(STOCKS.map(s => [s.ticker, s.name]));
 
 const SENTIMENT_FILTERS: { value: Sentiment; label: string }[] = [
   { value: 'positive', label: '호재' },
@@ -30,6 +29,7 @@ const SENTIMENT_FILTERS: { value: Sentiment; label: string }[] = [
 /** 뉴스 리스트 + 섹터/감성 필터 (기획서 §2.4) */
 export function NewsScreen() {
   const { colors } = useTheme();
+  const { nameOf } = useCatalog();
   const [items, setItems] = useState<NewsItem[]>([]);
   const [cursor, setCursor] = useState<string | undefined>();
   const [sector, setSector] = useState<Sector | null>(null);
@@ -178,7 +178,7 @@ export function NewsScreen() {
                   <Text
                     style={{ color: colors.primary, fontSize: 11, fontWeight: '700' }}
                   >
-                    ${STOCK_NAMES.get(ticker) ?? ticker}
+                    ${nameOf(ticker)}
                   </Text>
                 </Pressable>
               ))}

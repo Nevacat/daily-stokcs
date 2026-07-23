@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { CatalogService } from '../catalog/catalog.service';
 import { FavoritesService } from '../favorites/favorites.service';
 import { HistoryService } from '../history/history.service';
 import { DevicesService } from '../notifications/devices.service';
@@ -25,18 +26,19 @@ describe('CollectService 스케줄러', () => {
       path.join(os.tmpdir(), 'sched-test-'),
     );
     collectMock = jest.fn().mockResolvedValue([]);
+    const catalog = new CatalogService();
     settings = new SettingsService(); // 기본 60분
     service = new CollectService(
       { collect: collectMock } as unknown as RssCollectorService,
-      new AnalyzerService(),
+      new AnalyzerService(catalog),
       new NewsService(),
-      new RecommendationService(),
+      new RecommendationService(catalog),
       settings,
       new HistoryService(),
       {
         getPrices: jest.fn().mockResolvedValue(new Map()),
       } as unknown as PriceService,
-      new FavoritesService(),
+      new FavoritesService(catalog),
       new NotificationService(new DevicesService()),
     );
     service.onModuleInit();

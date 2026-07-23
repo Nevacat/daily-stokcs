@@ -2,6 +2,7 @@ import { Linking, Platform } from 'react-native';
 import type {
   ApiResponse,
   AuthResponse,
+  CatalogStockLite,
   ChartRange,
   PriceChart,
   CollectRun,
@@ -138,6 +139,9 @@ export const api = {
     request<ApiResponse<Record<string, StockQuote | null>>>(
       `/quotes?tickers=${encodeURIComponent(tickers.join(','))}`,
     ),
+
+  stockCatalog: () =>
+    request<ApiResponse<CatalogStockLite[]>>('/stocks/catalog'),
 
   stockDetail: (ticker: string) =>
     request<ApiResponse<StockDetail>>(`/stocks/${encodeURIComponent(ticker)}`),

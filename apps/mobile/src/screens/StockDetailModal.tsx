@@ -69,14 +69,17 @@ export function StockDetailModal({
             <>
               <Card>
                 <View style={styles.rowBetween}>
-                  <StockLogo ticker={detail.stock.ticker} size={40} />
+                  <StockLogo ticker={detail.stock.ticker} name={detail.stock.name} size={40} />
                   <View style={styles.stockInfo}>
                     <Text style={[styles.stockName, { color: colors.textPrimary }]}>
                       {detail.stock.name}
                     </Text>
                     <Text style={[styles.stockMeta, { color: colors.indigo }]}>
-                      {MARKET_LABELS[detail.stock.market]} ·{' '}
-                      {SECTOR_LABELS[detail.stock.sector]} · {detail.stock.ticker}
+                      {MARKET_LABELS[detail.stock.market]}
+                      {detail.stock.sector
+                        ? ` · ${SECTOR_LABELS[detail.stock.sector]}`
+                        : ''}{' '}
+                      · {detail.stock.ticker}
                     </Text>
                     {detail.quote && <QuoteLine quote={detail.quote} size={15} />}
                   </View>

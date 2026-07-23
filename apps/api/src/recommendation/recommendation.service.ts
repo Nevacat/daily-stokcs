@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { NewsItem, Recommendation, Sector } from '@daily-stocks/shared';
 import { SECTOR_LABELS } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 import { JsonStore } from '../common/json-store';
-import { STOCKS } from '../collect/analyzer/dictionaries';
 
 /** 섹터당 최대 추천 수 (기획서 §2.2) */
 const MAX_PER_SECTOR = 5;
@@ -13,6 +13,8 @@ const MIN_SCORE = 55;
 
 @Injectable()
 export class RecommendationService {
+  constructor(private readonly catalog: CatalogService) {}
+
   private readonly store = new JsonStore<Recommendation[]>('recommendations');
   private recommendations: Recommendation[] = this.store.load() ?? [];
 
@@ -23,7 +25,8 @@ export class RecommendationService {
   regenerate(allNews: NewsItem[], now: Date = new Date()): Recommendation[] {
     const next: Recommendation[] = [];
 
-    for (const stock of STOCKS) {
+    for (const stock of this.catalog.list()) {
+      if (!stock.sector) continue; // 섹터 미분류 종목은 추천 대상 제외
       const related = allNews.filter((n) => n.tickers.includes(stock.ticker));
       if (related.length === 0) continue;
 

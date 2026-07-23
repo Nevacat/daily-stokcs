@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BriefingModule } from './briefing/briefing.module';
+import { CatalogModule } from './catalog/catalog.module';
 import { CollectModule } from './collect/collect.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { HistoryModule } from './history/history.module';
@@ -15,6 +16,7 @@ import { TrendsModule } from './trends/trends.module';
 
 @Module({
   imports: [
+    CatalogModule,
     AuthModule,
     NewsModule,
     CollectModule,

@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { NotFoundException } from '@nestjs/common';
 import type { NewsItem } from '@daily-stocks/shared';
+import { CatalogService } from '../catalog/catalog.service';
 import { NewsService } from '../news/news.service';
 import { PriceService } from '../price/price.service';
 import { RecommendationService } from '../recommendation/recommendation.service';
@@ -30,7 +31,8 @@ function makeService(items: NewsItem[]) {
   process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'stock-test-'));
   const newsService = new NewsService();
   newsService.upsert(items, NOW);
-  const recService = new RecommendationService();
+  const catalog = new CatalogService();
+  const recService = new RecommendationService(catalog);
   recService.regenerate(newsService.findAll(), NOW);
   // 시세는 외부 API이므로 목 처리
   const priceService = {
@@ -41,6 +43,7 @@ function makeService(items: NewsItem[]) {
     recService,
     new TrendsService(newsService),
     priceService,
+    catalog,
   );
 }
 
