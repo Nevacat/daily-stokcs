@@ -2,38 +2,38 @@
 
 /** 기본 섹터 8종 (기획서 §2.2) */
 export const SECTORS = [
-  'semiconductor_ai',
-  'battery',
-  'bio_healthcare',
-  'automotive',
-  'finance',
-  'entertainment',
-  'defense_shipbuilding',
-  'energy_chemical',
+  "semiconductor_ai",
+  "battery",
+  "bio_healthcare",
+  "automotive",
+  "finance",
+  "entertainment",
+  "defense_shipbuilding",
+  "energy_chemical",
 ] as const;
 
 export type Sector = (typeof SECTORS)[number];
 
 export const SECTOR_LABELS: Record<Sector, string> = {
-  semiconductor_ai: '반도체/AI',
-  battery: '2차전지',
-  bio_healthcare: '바이오/헬스케어',
-  automotive: '자동차',
-  finance: '금융',
-  entertainment: '엔터/콘텐츠',
-  defense_shipbuilding: '방산/조선',
-  energy_chemical: '에너지/화학',
+  semiconductor_ai: "반도체/AI",
+  battery: "2차전지",
+  bio_healthcare: "바이오/헬스케어",
+  automotive: "자동차",
+  finance: "금융",
+  entertainment: "엔터/콘텐츠",
+  defense_shipbuilding: "방산/조선",
+  energy_chemical: "에너지/화학",
 };
 
 /** 시장 구분: 국내(KRX) / 미국 */
-export type Market = 'KR' | 'US';
+export type Market = "KR" | "US";
 
 export const MARKET_LABELS: Record<Market, string> = {
-  KR: '국내',
-  US: '미국',
+  KR: "국내",
+  US: "미국",
 };
 
-export type Sentiment = 'positive' | 'negative' | 'neutral';
+export type Sentiment = "positive" | "negative" | "neutral";
 
 export interface NewsItem {
   id: string;
@@ -70,11 +70,12 @@ export interface Recommendation {
   changePct?: number | null;
 }
 
-export type CollectStatus = 'idle' | 'collecting' | 'analyzing' | 'done' | 'failed';
+export type CollectStatus =
+  "idle" | "collecting" | "analyzing" | "done" | "failed";
 
 export interface CollectRun {
   id: string;
-  trigger: 'auto' | 'manual';
+  trigger: "auto" | "manual";
   status: CollectStatus;
   startedAt: string;
   finishedAt?: string;
@@ -93,15 +94,15 @@ export interface StockQuote {
 }
 
 /** 주가 차트 구간 */
-export const CHART_RANGES = ['1d', '1w', '1m', '3m', '1y'] as const;
+export const CHART_RANGES = ["1d", "1w", "1m", "3m", "1y"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
 
 export const CHART_RANGE_LABELS: Record<ChartRange, string> = {
-  '1d': '1일',
-  '1w': '1주',
-  '1m': '1달',
-  '3m': '3달',
-  '1y': '1년',
+  "1d": "1일",
+  "1w": "1주",
+  "1m": "1달",
+  "3m": "3달",
+  "1y": "1년",
 };
 
 /** 주가 차트 데이터 (Yahoo 기반, 15~20분 지연) */
@@ -119,7 +120,7 @@ export interface CatalogStock {
   ticker: string;
   name: string;
   market: Market;
-  exchange?: 'KOSPI' | 'KOSDAQ';
+  exchange?: "KOSPI" | "KOSDAQ";
   /** 8개 섹터로 매핑 안 되는 종목은 없음 — 추천 대상에서 제외되지만 검색·시세는 가능 */
   sector?: Sector;
   /** KRX 업종명 (원본) */
@@ -153,6 +154,38 @@ export interface StockDetail {
   news: NewsItem[];
 }
 
+/** 종목 비교 카드 1장 (2~3개를 나란히 놓고 본다) */
+export interface StockComparison {
+  ticker: string;
+  name: string;
+  /** 섹터 미분류 종목은 null */
+  sector: Sector | null;
+  market: Market;
+  /** 현재 추천 목록에 없으면 null */
+  score: number | null;
+  /** 시세 조회 실패 시 null */
+  quote: StockQuote | null;
+  /** 최근 7일 감성 뉴스 합계 (SentimentTrend를 합산한 값) */
+  sentiment7d: { positive: number; negative: number; neutral: number };
+}
+
+export type StockEventKind = "earnings" | "dividend";
+
+/**
+ * 예정 이벤트 (기획서 §3 확장).
+ * 모두 '추정치'다 — 실적은 법정 공시 기한, 배당은 과거 지급 주기에서 파생한다.
+ * 확정 일정을 주는 무료 소스가 없어 화면에 항상 예상임을 밝힌다.
+ */
+export interface StockEvent {
+  ticker: string;
+  stockName: string;
+  kind: StockEventKind;
+  /** KST 기준 YYYY-MM-DD (일정은 날짜 단위) */
+  date: string;
+  /** 화면에 그대로 출력하는 한 줄 설명 */
+  label: string;
+}
+
 /** 데일리 브리핑 (기획서 §3.4 — 오늘의 시장 요약 + 주목 섹터 + Top 3) */
 export interface DailyBriefing {
   /** KST 기준 YYYY-MM-DD */
@@ -169,6 +202,34 @@ export interface DailyBriefing {
   topSectors: { sector: Sector; positiveCount: number }[];
   /** 점수 상위 추천 3 */
   topPicks: Recommendation[];
+}
+
+/** 내일 볼 종목 한 줄 (나이트 브리핑 전용 경량 형태) */
+export interface NightWatchItem {
+  ticker: string;
+  stockName: string;
+  sector: Sector;
+  /** 오늘(KST) 이 종목이 언급된 뉴스 건수 */
+  todayNewsCount: number;
+  /** 현재 추천 점수 (0~100) */
+  score: number;
+}
+
+/**
+ * 나이트 브리핑 (KST 21:00~익일 05:59).
+ * 아침 DailyBriefing과 달리 '마감 요약 + 내일 볼 종목'이 목적이다.
+ * 요약 문장은 서버의 규칙 기반 템플릿으로 생성한다 (LLM 미사용).
+ */
+export interface NightBriefing {
+  /** KST 기준 YYYY-MM-DD — 자정~05:59에 열어도 '어제(=그 밤)'를 가리킨다 */
+  date: string;
+  generatedAt: string; // ISO 8601 UTC
+  /** 3줄 요약. 데이터가 없으면 줄 수가 줄어든다 (최소 1줄 보장, 최대 3줄) */
+  lines: string[];
+  /** 아침 브리핑과 동일한 감성 분포 (타입 재사용) */
+  marketSummary: DailyBriefing["marketSummary"];
+  /** 내일 볼 종목 최대 3개 */
+  watchlist: NightWatchItem[];
 }
 
 /** 일별 감성 집계 (기획서 §3.5 — 최근 7일 트렌드) */
@@ -196,7 +257,7 @@ export interface HistoryEntry {
 }
 
 /** 로그인 제공자 — dev는 개발용(프로덕션 비활성) */
-export type AuthProvider = 'kakao' | 'apple' | 'dev';
+export type AuthProvider = "kakao" | "apple" | "dev";
 
 export interface UserProfile {
   id: string;
@@ -218,14 +279,50 @@ export interface AuthResponse {
 export interface DeviceRegistration {
   /** FCM 디바이스 토큰 */
   token: string;
-  platform: 'ios' | 'android';
+  platform: "ios" | "android";
   registeredAt: string; // ISO 8601 UTC
+}
+
+/** 관심 종목을 '담은 시점' 기록 (모의 포트폴리오용) */
+export interface FavoriteEntry {
+  addedAt: string; // ISO 8601 UTC
+  /** 담은 시점 가격 — 시세 조회 실패 시 null */
+  priceAtAdd: number | null;
 }
 
 /** 관심 종목/섹터 (기획서 §3.1) */
 export interface Favorites {
   tickers: string[];
   sectors: Sector[];
+  /** ticker → 담은 시점 기록. 구버전 데이터엔 없을 수 있음 */
+  entries?: Record<string, FavoriteEntry>;
+}
+
+/** 모의 포트폴리오 한 종목 — 실제 매매가 아닌 가상 계산 */
+export interface PaperPosition {
+  ticker: string;
+  stockName: string;
+  /** 담은 기록이 없는 구버전 관심 종목은 null */
+  addedAt: string | null;
+  priceAtAdd: number | null;
+  /** 조회 시점 현재가 (마지막 거래일 종가 포함) */
+  currentPrice: number | null;
+  currency: string; // KRW | USD
+  /** 담은 시점 대비 등락률(%) — 두 가격이 모두 있을 때만 */
+  changePct: number | null;
+}
+
+/** 모의 포트폴리오 (기획서 §3.1 확장) */
+export interface PaperPortfolio {
+  positions: PaperPosition[];
+  /**
+   * 종목별 changePct의 단순 평균(%).
+   * 수량 개념이 없으므로 금액 가중이 아니다. 계산 가능한 종목이 0개면 null.
+   */
+  averageChangePct: number | null;
+  /** changePct를 계산할 수 있었던 종목 수 */
+  measuredCount: number;
+  asOf: string; // ISO 8601 UTC
 }
 
 /** 자동 수집 주기 옵션(분). null = 자동 수집 끄기 (기획서 §2.1) */
@@ -250,4 +347,4 @@ export interface ApiError {
   error: { code: string; message: string };
 }
 
-export { STOCKS, type StockEntry } from './stocks';
+export { STOCKS, type StockEntry } from "./stocks";

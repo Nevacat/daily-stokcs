@@ -44,7 +44,9 @@ const article = (title: string, url: string): RawArticle => ({
   title,
   url,
   press: '테스트',
-  publishedAt: '2026-07-22T08:00:00.000Z',
+  // 상대 시각 — 고정 날짜를 쓰면 NewsService.RETENTION_DAYS(7일) 밖으로 밀려나
+  // 시간이 지난 뒤 테스트가 혼자 깨진다
+  publishedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
 });
 
 describe('CollectService', () => {
