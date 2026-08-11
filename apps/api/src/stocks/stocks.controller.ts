@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import type {
   ApiResponse,
   CatalogStockLite,
+  StockComparison,
   StockDetail,
 } from '@daily-stocks/shared';
 import { CatalogService } from '../catalog/catalog.service';
@@ -32,6 +33,23 @@ export class StocksController {
         .search(q ?? '')
         .map(({ ticker, name, market }) => ({ ticker, name, market })),
     };
+  }
+
+  /**
+   * 종목 비교 (2~3개).
+   * ⚠️ 이 핸들러는 반드시 @Get(':ticker') 위에 있어야 한다 —
+   *    아래에 두면 'compare'가 티커로 매칭돼 UNKNOWN_TICKER가 난다.
+   *    stocks.service.spec.ts 의 라우트 순서 테스트가 이를 잠근다.
+   */
+  @Get('compare')
+  async compare(
+    @Query('tickers') tickers?: string,
+  ): Promise<ApiResponse<StockComparison[]>> {
+    const list = (tickers ?? '')
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    return { data: await this.stocksService.compare(list) };
   }
 
   @Get(':ticker')
