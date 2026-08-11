@@ -7,7 +7,7 @@ import { api } from '../api/client';
 import { Skeleton } from './Skeleton';
 import { Card, Chip } from './ui';
 import { useTheme } from '../theme/ThemeContext';
-import { spacing } from '../theme/tokens';
+import { changeColor, spacing } from '../theme/tokens';
 
 const CHART_HEIGHT = 140;
 
@@ -62,7 +62,10 @@ export function PriceChartCard({ ticker }: { ticker: string }) {
       CHART_HEIGHT - ((price - min) / span) * (CHART_HEIGHT - 8) - 4;
 
     const path = chart.points
-      .map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(p.price).toFixed(1)}`)
+      .map(
+        (p, i) =>
+          `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(p.price).toFixed(1)}`,
+      )
       .join(' ');
 
     const last = prices[prices.length - 1];
@@ -73,7 +76,7 @@ export function PriceChartCard({ ticker }: { ticker: string }) {
 
   const up = (rendered?.changePct ?? 0) > 0;
   const flat = (rendered?.changePct ?? 0) === 0;
-  const lineColor = flat ? colors.textSecondary : up ? colors.danger : colors.primary;
+  const lineColor = changeColor(rendered?.changePct ?? 0, colors);
 
   return (
     <Card style={styles.card}>
@@ -99,7 +102,12 @@ export function PriceChartCard({ ticker }: { ticker: string }) {
               strokeWidth={1}
               strokeDasharray="4 4"
             />
-            <Path d={rendered.path} stroke={lineColor} strokeWidth={2} fill="none" />
+            <Path
+              d={rendered.path}
+              stroke={lineColor}
+              strokeWidth={2}
+              fill="none"
+            />
           </Svg>
         </>
       )}

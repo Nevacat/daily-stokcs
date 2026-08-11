@@ -15,7 +15,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
 import { Card, ScorePill } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
-import { spacing } from '../theme/tokens';
+import { changeColor, spacing } from '../theme/tokens';
 import { StockDetailModal } from './StockDetailModal';
 
 function formatDate(date: string): string {
@@ -38,7 +38,9 @@ export function HistoryScreen() {
       setEntries(res.data);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.');
+      setError(
+        e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.',
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,9 @@ export function HistoryScreen() {
         />
       }
     >
-      <Text style={[styles.title, { color: colors.textPrimary }]}>히스토리</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>
+        히스토리
+      </Text>
 
       {error && (
         <ErrorCard
@@ -93,7 +97,9 @@ export function HistoryScreen() {
           <View key={entry.date} style={styles.section}>
             <View style={styles.sectionHeader}>
               <CalendarDays size={15} color={colors.indigo} />
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              >
                 {formatDate(entry.date)}
               </Text>
               <Text style={[styles.count, { color: colors.textDisabled }]}>
@@ -114,7 +120,9 @@ export function HistoryScreen() {
                   ]}
                 >
                   <View style={styles.recInfo}>
-                    <Text style={[styles.stockName, { color: colors.textPrimary }]}>
+                    <Text
+                      style={[styles.stockName, { color: colors.textPrimary }]}
+                    >
                       {rec.stockName}
                     </Text>
                     <Text style={[styles.sectorText, { color: colors.indigo }]}>
@@ -127,13 +135,10 @@ export function HistoryScreen() {
                       <Text
                         style={[
                           styles.changePct,
-                          {
-                            color:
-                              rec.changePct >= 0 ? colors.success : colors.danger,
-                          },
+                          { color: changeColor(rec.changePct, colors) },
                         ]}
                       >
-                        {rec.changePct >= 0 ? '+' : ''}
+                        {rec.changePct > 0 ? '+' : ''}
                         {rec.changePct}%
                       </Text>
                     )}

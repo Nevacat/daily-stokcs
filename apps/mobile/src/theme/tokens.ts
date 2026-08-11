@@ -79,6 +79,15 @@ export const darkColors: ThemeColors = {
   shadow: 'rgba(0,0,0,0.35)',
 };
 
+/**
+ * 등락률 색 (국내 관례) — 상승 빨강 / 하락 파랑 / 보합 회색.
+ * 시세를 보여주는 모든 화면이 이 함수를 쓴다 (관례가 화면마다 어긋나지 않게).
+ */
+export function changeColor(changePct: number, colors: ThemeColors): string {
+  if (changePct === 0) return colors.textSecondary;
+  return changePct > 0 ? colors.danger : colors.primary;
+}
+
 export const radius = {
   card: 20,
   button: 14,

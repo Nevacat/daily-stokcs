@@ -11,7 +11,7 @@ import {
 import type { Sentiment, StockQuote } from '@daily-stocks/shared';
 import { formatPrice } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
-import { radius, spacing } from '../theme/tokens';
+import { changeColor, radius, spacing } from '../theme/tokens';
 
 /** DeTok Card — radius 20, 은은한 그림자 */
 export function Card({
@@ -88,7 +88,10 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: background(pressed), opacity: isDisabled ? 0.55 : 1 },
+        {
+          backgroundColor: background(pressed),
+          opacity: isDisabled ? 0.55 : 1,
+        },
         style,
       ]}
     >
@@ -179,13 +182,17 @@ export function QuoteLine({
   const { colors } = useTheme();
   const up = quote.changePct > 0;
   const flat = quote.changePct === 0;
-  const changeColor = flat ? colors.textSecondary : up ? colors.danger : colors.primary;
   return (
     <Text style={{ fontSize: size }}>
       <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>
         {formatPrice(quote)}
       </Text>
-      <Text style={{ color: changeColor, fontWeight: '600' }}>
+      <Text
+        style={{
+          color: changeColor(quote.changePct, colors),
+          fontWeight: '600',
+        }}
+      >
         {'  '}
         {flat ? '—' : up ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(2)}%
       </Text>
