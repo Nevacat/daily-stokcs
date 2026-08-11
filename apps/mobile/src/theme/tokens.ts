@@ -158,52 +158,59 @@ export const darkColors: ThemeColors = {
  * 브랜드 블루는 violet(#B9A6E0) 로 살아남는다 — 로고·그라디언트·섹터 태그.
  */
 export const nightColors: ThemeColors = {
-  background: '#14100D', //  L .178
-  backgroundSoft: '#1B1713', //  L .206
-  card: '#221D18', //  L .235
-  cardPressed: '#28221E', //  L .257
-  surface: '#2F2924', //  L .285
-  surfaceHigh: '#3A342E', //  L .330
-  scrim: 'rgba(10,6,3,0.74)',
+  /**
+   * NIGHT (심야) — 다크와 같은 남색 계열(H=265)을 유지하되 **더 어둡고 덜 밝다**.
+   *
+   * v2.2: 앰버(웜 시프트)를 버렸다. 표면·텍스트를 세피아로 칠하니 화면 전체가
+   * 한 색으로 눌려 탁했고, 브랜드 블루·바이올렛과도 조화가 깨졌다.
+   *
+   * 눈이 편한 실제 기전은 색온도가 아니라 **절대 휘도**다. 청색광-멜라토닌 근거는
+   * 과장된 편이라 색을 비틀어 얻는 이득이 크지 않다. 그래서 심야는 색상을 돌리는
+   * 대신 배경 휘도를 다크의 47% 로 낮추고 텍스트 상한도 함께 내렸다
+   * (13.65:1 → 12.24:1) — 어두운 방에서 흰 글씨가 번지는 헤일레이션을 줄인다.
+   * 순수 검정은 쓰지 않는다 (브랜드 가이드).
+   */
+  background: '#070B13', //  휘도 0.0033 — 다크(#0E1422)의 47%
+  backgroundSoft: '#0C111B',
+  card: '#111725',
+  cardPressed: '#161C2B',
+  surface: '#1C2333',
+  surfaceHigh: '#272E40',
+  scrim: 'rgba(3,5,10,0.76)',
 
-  // v2.1: 명도 사다리와 대비는 그대로 두고 채도만 뺐다.
-  // 표면·텍스트를 전부 세피아로 칠하면 화면 전체가 한 색으로 눌려 탁해 보인다.
-  // iOS Night Shift·f.lux 가 하는 일은 UI 를 갈색으로 칠하는 게 아니라
-  // 중성 UI 의 색온도를 낮추는 것이다 — 따뜻함은 액센트에만 남긴다.
-  textPrimary: '#D9D4CD', // vs bg 12.84:1  채도 33→12
-  textSecondary: '#B3ADA5', // vs bg  8.50:1  채도 40→14
-  textTertiary: '#9A938A', // vs bg  6.23:1  채도 43→16
-  textDisabled: '#7D766D', // vs bg  4.22:1  채도 44→16
+  textPrimary: '#C6CCDA', // vs bg 12.24:1 (다크 13.65 보다 낮춰 헤일레이션 억제)
+  textSecondary: '#98A0B2', // vs bg  7.51:1
+  textTertiary: '#7C8496', // vs bg  5.25:1
+  textDisabled: '#6A7285', // vs bg  4.09:1
 
-  // 알파 베이스는 웜 화이트지만 주황기를 뺐다 (255,214,170 → 255,236,214)
-  borderSubtle: 'rgba(255,236,214,0.06)',
-  border: 'rgba(255,236,214,0.10)',
-  borderStrong: 'rgba(255,236,214,0.16)',
-  divider: 'rgba(255,236,214,0.07)',
-  innerHighlight: 'rgba(255,236,214,0.08)',
+  borderSubtle: 'rgba(255,255,255,0.06)',
+  border: 'rgba(255,255,255,0.10)',
+  borderStrong: 'rgba(255,255,255,0.16)',
+  divider: 'rgba(255,255,255,0.07)',
+  innerHighlight: 'rgba(255,255,255,0.07)',
 
-  // 따뜻함은 여기에만 남는다 — 액센트는 면적이 좁아 탁해지지 않는다
-  primary: '#E0A75B', // vs bg 8.87:1  ≈3112K
-  primaryFill: '#D59741', // 어두운 라벨 7.49:1
-  primaryPressed: '#BC8433', // 어두운 라벨 5.83:1
-  onPrimaryFill: '#14100D', // ← night 만 어두운 라벨
-  primarySoft: '#3F3327', // 칩 위 primary 5.75:1
-  violet: '#B9A6E0', // vs bg 8.65:1 — 심야에 남는 브랜드 아이덴티티
-  indigo: '#B9A6E0',
+  // 액센트도 다크보다 한 단계 죽인다 — 어두운 방에서 튀지 않게
+  primary: '#8E9BE8', // vs bg 7.51:1 (다크 #A6B0FF 보다 차분)
+  primaryFill: '#2A5DB0', // 흰 라벨 6.38:1
+  primaryPressed: '#224E97',
+  onPrimaryFill: '#FFFFFF',
+  primarySoft: '#18223A', // 칩 위 primary 6.02:1
+  violet: '#B190DB', // vs bg 7.39:1 — 브랜드 아이덴티티
+  indigo: '#8E9BE8',
 
-  up: '#F89884', // vs bg 8.85:1
-  down: '#8EB6DC', // vs bg 8.90:1  저채도 더스티 블루 (눈편함 우선)
-  flat: '#BAB0A6', // vs bg 8.88:1
-  upSoft: '#42322B', // 칩 위 up 텍스트 5.70:1
-  downSoft: '#363534', // 칩 위 down 텍스트 5.76:1
+  up: '#E8887A', // vs bg 7.72:1
+  down: '#5F9FDC', // vs bg 7.01:1
+  flat: '#969DAA', // vs bg 7.22:1
+  upSoft: '#2E2230', // 칩 위 up 5.93:1
+  downSoft: '#152538', // 칩 위 down 5.53:1
 
-  success: '#A9BE8A',
-  danger: '#F89884',
-  warning: '#DCC97A', // primary 와 OKLab 거리 0.10 — 아이콘 병용 필수
+  success: '#7FA97C',
+  danger: '#E8887A',
+  warning: '#C9A253',
 
-  chart: ['#FDBD69', '#E28A6F', '#FEA9AF', '#C588B0', '#C6B2ED', '#7196BC'],
-  aurora: ['#22140B', '#241210', '#1D170D'], // 전부 L≈0.0087 < card L 0.0128
-  shadow: 'rgba(8,4,1,0.60)',
+  chart: ['#6FA8E8', '#8C86D0', '#CE93D8', '#DA8272', '#D9AC63', '#78889A'],
+  aurora: ['#04122C', '#140A28', '#0A1026'], // 전부 card(L .0087) 보다 어둡다
+  shadow: 'rgba(2,4,8,0.62)',
 };
 
 /** LIGHT (보조) — 라이트는 그림자로 깊이를 만든다. 표면 사다리를 쓰지 않는다. */
