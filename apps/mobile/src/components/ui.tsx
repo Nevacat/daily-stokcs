@@ -304,31 +304,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignSelf: 'flex-start',
   },
-  score: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.chip,
-    width: 52,
-    height: 52,
-  },
 });
-
-/**
- * 0~100 추천 점수 (구형).
- *
- * ponytail: 다음 PR(`feature/motion-3d-core`)의 `ScoreRing` 이 링 게이지 + 카운트업으로
- * 이 역할을 대체하고 이 export 는 제거된다. 지금 남겨두는 이유는 이 PR 하나만 머지해도
- * HomeScreen·HistoryScreen·StockDetailModal·RecommendationDetailModal 이 컴파일되게
- * 하기 위해서다 — 스택 PR 의 중간 단계가 깨지면 되돌릴 지점이 사라진다.
- */
-export function ScorePill({ score }: { score: number }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.score}>
-      <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 16 }}>
-        {score}
-      </Text>
-      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>점</Text>
-    </View>
-  );
-}

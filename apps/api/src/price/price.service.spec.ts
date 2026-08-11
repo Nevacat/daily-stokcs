@@ -109,6 +109,27 @@ describe('PriceService (Yahoo 시세)', () => {
     expect(calledUrl(1)).toContain('range=1mo&interval=1d');
   });
 
+  it('차트: 기준선이 0이면 null로 준다 (앱의 Infinity% 방어)', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          chart: {
+            result: [
+              {
+                meta: { currency: 'KRW', chartPreviousClose: 0 },
+                timestamp: [1784800000, 1784800300],
+                indicators: { quote: [{ close: [265000, 270000] }] },
+              },
+            ],
+          },
+        }),
+    });
+    const chart = await service.getChart('005930', '1d');
+    expect(chart?.points).toHaveLength(2); // 차트 자체는 그대로 준다
+    expect(chart?.previousClose).toBeNull();
+  });
+
   it('getPrices는 중복 티커를 한 번만 조회한다', async () => {
     const prices = await service.getPrices(['005930', '005930', 'NVDA']);
     expect(fetchMock).toHaveBeenCalledTimes(2);
