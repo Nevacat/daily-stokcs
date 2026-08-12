@@ -5,7 +5,8 @@ import React, {
   useSyncExternalStore,
   type PropsWithChildren,
 } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
+import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -70,11 +71,14 @@ export function Stagger({
   index = 0,
   enabled = true,
   style,
+  onLayout,
   children,
 }: PropsWithChildren<{
   index?: number;
   enabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** 1순위 카드 세로 위치 측정용 (HomeScreen 스크롤 틸트) */
+  onLayout?: (e: LayoutChangeEvent) => void;
 }>) {
   const reduced = useMotionReduced();
   const progress = useSharedValue(enabled ? 0 : 1);
@@ -95,12 +99,32 @@ export function Stagger({
 
   const animated = useAnimatedStyle(() => ({
     opacity: progress.value,
-    // reduce motion 이면 이동을 빼고 페이드만 남긴다
-    transform: [{ translateY: reduced ? 0 : (1 - progress.value) * 12 }],
+    // reduce motion 이면 이동·회전을 빼고 페이드만 남긴다
+    transform: reduced
+      ? []
+      : [
+          { perspective: 600 },
+          { translateY: (1 - progress.value) * 10 },
+          // 다크에서 12px 세로 이동은 거의 안 보인다. 카드 림이 사다리꼴로
+          // 변형되는 rotateX 가 같은 정보(진입)를 훨씬 잘 전달한다.
+          { rotateX: `${(1 - progress.value) * 0.14}rad` },
+        ],
   }));
 
-  return <Animated.View style={[style, animated]}>{children}</Animated.View>;
+  return (
+    <Animated.View
+      style={[styles.stagger, style, animated]}
+      onLayout={onLayout}
+    >
+      {children}
+    </Animated.View>
+  );
 }
+
+const styles = StyleSheet.create({
+  // 카드가 아래 모서리를 축으로 "세워지며" 들어온다
+  stagger: { transformOrigin: 'bottom' },
+});
 
 // ── PROMPT 5 — 카드 → 상세 Z축 전환 (모션 표 E) ──────────────────────────────
 export interface OriginRect {
@@ -248,8 +272,76 @@ export function useZoomTransition({
   };
 }
 
-// ── PROMPT 7 — 하단 탭 마이크로 인터랙션 (모션 표 J) ─────────────────────────
-/** 활성 탭 뒤 알약 인디케이터의 위치. 가로로 움직이는 유일한 요소다. */
+// ── PROMPT 7 — 하단 탭 마이크로 인터랙션 (모션 표 J, v2) ─────────────────────
+/**
+ * 활성 탭 액센트 바 — 탭바 상단 경계에 얹히는 28×2px.
+ *
+ * 슬라이딩 알약을 버린 이유: primarySoft(#1E3150)와 탭바 backgroundSoft(#141A29)의
+ * 휘도 차가 표면 사다리 한 칸에도 못 미쳐 다크에서 "덩어리"로 뭉갠다.
+ * 다크에서 확실히 읽히는 것은 면이 아니라 고대비 선이다 (primary 는 배경 대비 9.00:1).
+ * 그리고 가로로 미끄러지는 요소를 없앤다 — 각 탭이 제 자리에서 켜지고 꺼진다.
+ */
+export function useTabAccent(
+  active: boolean,
+): ReturnType<typeof useAnimatedStyle> {
+  const reduced = useMotionReduced();
+  const on = useSharedValue(active ? 1 : 0);
+
+  useEffect(() => {
+    if (reduced) {
+      on.value = withTiming(active ? 1 : 0, {
+        duration: motion.duration.micro,
+      });
+      return;
+    }
+    // 진입만 탄력 있게, 퇴장은 짧은 timing (모션 전역 원칙)
+    on.value = active
+      ? withSpring(1, { damping: 18, stiffness: 260, mass: 0.7 })
+      : withTiming(0, {
+          duration: 120,
+          easing: Easing.bezier(...motion.easing.exit),
+        });
+  }, [active, reduced, on]);
+
+  return useAnimatedStyle(() => ({
+    opacity: on.value,
+    // reduce motion 이면 폭 변화 없이 페이드만 남긴다
+    transform: [{ scaleX: reduced ? 1 : 0.4 + on.value * 0.6 }],
+  }));
+}
+
+/**
+ * 탭 활성화 시 아이콘 squash → pop.
+ * 기존 timing 110/130 시퀀스는 감쇠가 대칭이라 기계적으로 읽혔다.
+ * 짧은 눌림 뒤 저감쇠 스프링(ζ≈0.36)이 물리적으로 읽힌다.
+ */
+export function useTabIconPop(
+  active: boolean,
+): ReturnType<typeof useAnimatedStyle> {
+  const reduced = useMotionReduced();
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (!active || reduced) return;
+    scale.value = withSequence(
+      withTiming(0.9, {
+        duration: 70,
+        easing: Easing.bezier(...motion.easing.press),
+      }),
+      withSpring(1, { damping: 11, stiffness: 380, mass: 0.6 }),
+    );
+  }, [active, reduced, scale]);
+
+  return useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+}
+
+/**
+ * 구 탭 인디케이터 훅 — AppRoot 가 아직 쓴다.
+ *
+ * ponytail: 슬라이딩 알약은 useTabAccent 로 대체됐다. AppRoot 를 소유한
+ *           feature/paper-portfolio PR 에서 호출부를 바꾸며 이 둘을 제거한다.
+ *           스택 중간 단계가 깨지지 않게 남겨둔다.
+ */
 export function useTabIndicator(
   activeIndex: number,
   tabWidth: number,
@@ -268,7 +360,6 @@ export function useTabIndicator(
   return useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
 }
 
-/** 탭 활성화 시 아이콘 1 → 1.12 → 1 바운스. reduce motion 이면 아무것도 하지 않는다. */
 export function useTabIconScale(
   active: boolean,
 ): ReturnType<typeof useAnimatedStyle> {

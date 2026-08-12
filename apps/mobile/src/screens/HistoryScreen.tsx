@@ -9,14 +9,19 @@ import {
 } from 'react-native';
 import { CalendarDays } from 'lucide-react-native';
 import type { HistoryEntry } from '@daily-stocks/shared';
-import { SECTOR_LABELS } from '@daily-stocks/shared';
+import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api } from '../api/client';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
 import { ScoreRing } from '../components/ScoreRing';
 import { Card } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
-import { changeColor, changeMark, spacing } from '../theme/tokens';
+import {
+  changeColor,
+  changeMark,
+  sectorChartColor,
+  spacing,
+} from '../theme/tokens';
 import { StockDetailModal } from './StockDetailModal';
 
 function formatDate(date: string): string {
@@ -122,7 +127,19 @@ export function HistoryScreen() {
                     >
                       {rec.stockName}
                     </Text>
-                    <Text style={[styles.sectorText, { color: colors.indigo }]}>
+                    {/* 홈 카드의 섹터 배지와 같은 색 체계 — 섹터마다 다른 색이어야
+                        두 화면에서 같은 섹터가 같은 색으로 읽힌다 */}
+                    <Text
+                      style={[
+                        styles.sectorText,
+                        {
+                          color: sectorChartColor(
+                            SECTORS.indexOf(rec.sector),
+                            colors,
+                          ),
+                        },
+                      ]}
+                    >
                       {SECTOR_LABELS[rec.sector]}
                     </Text>
                   </View>

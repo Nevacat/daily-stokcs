@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Animated, {
+  useAnimatedRef,
+  useDerivedValue,
+  useScrollOffset,
+  useSharedValue,
+} from 'react-native-reanimated';
 import type { PriceChart, SentimentTrend } from '@daily-stocks/shared';
 import { useTheme, type ThemeMode } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
@@ -15,8 +26,8 @@ import {
   Stagger,
   setForceReducedMotion,
   useMotionReduced,
-  useTabIconScale,
-  useTabIndicator,
+  useTabAccent,
+  useTabIconPop,
 } from './motion';
 
 /**
@@ -25,6 +36,7 @@ import {
  *
  * 확인 포인트
  *  - 오로라가 카드보다 밝아지지 않는가 (엘리베이션 역전)
+ *  - TiltCard: **아무것도 안 해도 기울어 있다**(림이 사다리꼴). 스크롤하면 각도가 흐른다.
  *  - TiltCard: 길게 누른 뒤 드래그 → 판과 전경이 서로 다른 속도로 기운다
  *  - reduce motion 토글: TiltCard 는 평면 카드로, 카운트업은 최종값으로 점프
  */
@@ -63,10 +75,15 @@ const THEME_MODES: { mode: ThemeMode; label: string }[] = [
 
 const TAB_LABELS = ['홈', '뉴스', '기록', '설정'];
 const TAB_WIDTH = 76;
-const INDICATOR_WIDTH = 48;
+const ACCENT_WIDTH = 28;
+const ACCENT_HEIGHT = 2;
+
+const TILT_W = 280;
+const TILT_H = 150;
 
 export function MotionGallery() {
   const { colors, mode, setMode } = useTheme();
+  const { height: screenHeight } = useWindowDimensions();
   const reduced = useMotionReduced();
   const [sentiment, setSentiment] = useState<'positive' | 'negative'>(
     'positive',
@@ -75,7 +92,16 @@ export function MotionGallery() {
   // 진입 애니메이션을 다시 보려면 키를 바꿔 리마운트한다
   const [replay, setReplay] = useState(0);
 
-  const indicatorStyle = useTabIndicator(tab, TAB_WIDTH, INDICATOR_WIDTH);
+  // 틸트 카드 스크롤 연동 — HomeScreen 이 할 배선과 같은 형태다.
+  // 오프셋과 카드 y 만 shared value 로 들고 각도 계산은 전부 worklet (JS 왕복 0).
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollY = useScrollOffset(scrollRef);
+  const tiltCardY = useSharedValue(0);
+  const tiltProgress = useDerivedValue(() => {
+    const half = screenHeight / 2;
+    const offset = tiltCardY.value + TILT_H / 2 - scrollY.value - half;
+    return Math.max(-1, Math.min(1, offset / half));
+  });
 
   const counts =
     sentiment === 'positive'
@@ -86,7 +112,10 @@ export function MotionGallery() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <AuroraBackground {...counts} />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+      >
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           모션 · 3D 갤러리
         </Text>
@@ -137,23 +166,36 @@ export function MotionGallery() {
           </View>
         </Section>
 
-        <Section title="D. 3D 틸트 카드 (Skia 원근)" colors={colors}>
+        <Section title="D. 3D 틸트 카드 (Skia 원근, 상시)" colors={colors}>
           <Text style={[styles.body, { color: colors.textSecondary }]}>
-            길게 누른 뒤(0.18초) 드래그해 보세요. 손을 떼면 스프링으로 돌아와요.
+            손대지 않아도 3.15° 기울어 있어요 — 테두리가 사다리꼴로 꺾인 걸
+            보세요. 스크롤하면 각도와 광택이 흘러요. 길게 누른 뒤(0.18초)
+            드래그하면 더 크게 기울고, 손을 떼면 원래 기울기로 돌아와요.
           </Text>
-          <TiltCard key={`tilt-${replay}`} width={280} height={150}>
-            <View style={styles.tiltInner}>
-              <View style={styles.tiltText}>
-                <Text style={[styles.stock, { color: colors.textPrimary }]}>
-                  삼성전자
-                </Text>
-                <Text style={[styles.body, { color: colors.textSecondary }]}>
-                  긍정 뉴스가 많아요
-                </Text>
+          <View
+            onLayout={e => {
+              tiltCardY.value = e.nativeEvent.layout.y;
+            }}
+          >
+            <TiltCard
+              key={`tilt-${replay}`}
+              width={TILT_W}
+              height={TILT_H}
+              scrollProgress={tiltProgress}
+            >
+              <View style={styles.tiltInner}>
+                <View style={styles.tiltText}>
+                  <Text style={[styles.stock, { color: colors.textPrimary }]}>
+                    삼성전자
+                  </Text>
+                  <Text style={[styles.body, { color: colors.textSecondary }]}>
+                    긍정 뉴스가 많아요
+                  </Text>
+                </View>
+                <ScoreRing score={88} />
               </View>
-              <ScoreRing score={88} />
-            </View>
-          </TiltCard>
+            </TiltCard>
+          </View>
         </Section>
 
         <Section title="F. 점수 링 + 카운트업" colors={colors}>
@@ -201,17 +243,18 @@ export function MotionGallery() {
           />
         </Section>
 
-        <Section title="J. 하단 탭 인디케이터" colors={colors}>
+        <Section title="J. 하단 탭 액센트" colors={colors}>
           <View
             style={[styles.tabBar, { backgroundColor: colors.backgroundSoft }]}
           >
-            <Animated.View
-              style={[
-                styles.indicator,
-                { width: INDICATOR_WIDTH, backgroundColor: colors.primarySoft },
-                indicatorStyle,
-              ]}
-            />
+            {/* 가로로 미끄러지는 알약 대신, 탭마다 제자리에서 켜지는 2px 액센트 */}
+            {TAB_LABELS.map((label, i) => (
+              <TabAccent
+                key={`accent-${label}`}
+                left={i * TAB_WIDTH + (TAB_WIDTH - ACCENT_WIDTH) / 2}
+                active={tab === i}
+              />
+            ))}
             {TAB_LABELS.map((label, i) => (
               <TabItem
                 key={label}
@@ -224,8 +267,20 @@ export function MotionGallery() {
         </Section>
 
         <View style={styles.footer} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
+  );
+}
+
+/** 제자리에서 켜지고 꺼지는 액센트 바 — 가로 이동이 없다 */
+function TabAccent({ left, active }: { left: number; active: boolean }) {
+  const { colors } = useTheme();
+  const style = useTabAccent(active);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.accent, { left, backgroundColor: colors.primary }, style]}
+    />
   );
 }
 
@@ -239,7 +294,7 @@ function TabItem({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
-  const scale = useTabIconScale(active);
+  const pop = useTabIconPop(active);
   return (
     <Pressable
       onPress={onPress}
@@ -249,7 +304,7 @@ function TabItem({
     >
       <Animated.Text
         style={[
-          scale,
+          pop,
           {
             color: active ? colors.primary : colors.textDisabled,
             fontWeight: active ? '700' : '500',
@@ -307,12 +362,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignSelf: 'flex-start',
   },
-  indicator: {
+  accent: {
     position: 'absolute',
-    top: spacing.sm,
-    left: 0,
-    height: 32,
-    borderRadius: 999,
+    top: 0,
+    width: ACCENT_WIDTH,
+    height: ACCENT_HEIGHT,
+    borderRadius: ACCENT_HEIGHT / 2,
   },
   tabItem: { alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   footer: { height: 80 },
