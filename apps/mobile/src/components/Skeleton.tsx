@@ -19,6 +19,7 @@ import Animated, {
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 import { useMotionReduced } from './motion';
+import { SPARKLINE_SIZE } from './Sparkline';
 
 /**
  * 로딩 스켈레톤 — shimmer 스윕 (디자이너 스펙 PROMPT 6, 모션 표 G).
@@ -130,7 +131,10 @@ export function Skeleton({
   );
 }
 
-/** 추천/뉴스 카드 형태의 스켈레톤 — index 를 주면 카드끼리 순차로 반짝인다 */
+/**
+ * 추천/뉴스 카드 형태의 스켈레톤 — index 를 주면 카드끼리 순차로 반짝인다.
+ * 세로 구성은 실제 카드와 같다: 로고줄 36 / 스파크라인 22 / 이유 19 (+ 패딩 32) = 121.
+ */
 export function SkeletonCard({ index = 0 }: { index?: number }) {
   const { colors } = useTheme();
   return (
@@ -141,9 +145,15 @@ export function SkeletonCard({ index = 0 }: { index?: number }) {
       ]}
     >
       <View style={styles.body}>
-        <Skeleton width="45%" height={16} index={index} />
-        <Skeleton width="30%" height={11} index={index} />
-        <Skeleton width="90%" height={12} index={index} />
+        <Skeleton width="55%" height={36} index={index} />
+        {/* 스파크라인 자리 — 로고(36)+gap(8) 만큼 들여쓴다 */}
+        <Skeleton
+          width={SPARKLINE_SIZE.width}
+          height={SPARKLINE_SIZE.height}
+          index={index}
+          style={styles.spark}
+        />
+        <Skeleton width="90%" height={19} index={index} />
       </View>
       <Skeleton width={52} height={52} index={index} style={styles.circle} />
     </View>
@@ -162,6 +172,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: spacing.lg,
   },
-  body: { flex: 1, gap: spacing.sm },
+  body: { flex: 1, gap: 6 },
+  spark: { marginLeft: 44 },
   circle: { borderRadius: 26 },
 });
