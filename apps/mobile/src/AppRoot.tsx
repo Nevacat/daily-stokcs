@@ -18,7 +18,7 @@ import {
 import { History, Home, Newspaper, Settings } from 'lucide-react-native';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { CatalogProvider } from './catalog/CatalogContext';
-import { useTabIconScale, useTabIndicator } from './components/motion';
+import { useTabAccent, useTabIconPop } from './components/motion';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { spacing } from './theme/tokens';
 import { HomeScreen } from './screens/HomeScreen';
@@ -40,11 +40,11 @@ const TABS: { key: Tab; label: string; Icon: typeof Home }[] = [
 
 const ONBOARDING_KEY = 'detok.onboarded';
 
-/** 활성 탭 뒤 알약 인디케이터 크기 (모션 표 J) */
-const INDICATOR_WIDTH = 48;
-const INDICATOR_HEIGHT = 32;
+/** 활성 탭 액센트 바 — 아이콘(22)+라벨 묶음 폭에 맞춘다 */
+const ACCENT_WIDTH = 28;
+const ACCENT_HEIGHT = 2;
 
-/** 탭 한 칸 — 아이콘 바운스 훅을 쓰려면 map 안이 아니라 컴포넌트여야 한다 */
+/** 탭 한 칸 — 아이콘 팝 훅을 쓰려면 map 안이 아니라 컴포넌트여야 한다 */
 function TabItem({
   label,
   Icon,
@@ -57,7 +57,7 @@ function TabItem({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
-  const iconStyle = useTabIconScale(active);
+  const iconStyle = useTabIconPop(active);
   const color = active ? colors.primary : colors.textDisabled;
 
   return (
@@ -80,6 +80,21 @@ function TabItem({
   );
 }
 
+/**
+ * 탭 하나짜리 액센트 바. 훅을 탭 개수만큼 쓰려면 컴포넌트여야 한다.
+ * 위치가 prop 으로 고정이라 애니메이션되는 값은 opacity/scaleX 뿐이다 — 가로 이동 없음.
+ */
+function TabAccent({ left, active }: { left: number; active: boolean }) {
+  const { colors } = useTheme();
+  const style = useTabAccent(active);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.accent, { left, backgroundColor: colors.primary }, style]}
+    />
+  );
+}
+
 function Shell() {
   const { colors, isDark, theme, nightSchedule } = useTheme();
   // 밝기 낮추기는 심야 테마에서만 의미가 있다 — 낮에 켜두고 잊으면 화면만 어두워진다
@@ -90,12 +105,8 @@ function Shell() {
   const [tab, setTab] = useState<Tab>('home');
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
-  // 훅은 아래 조건부 return 보다 위에 있어야 한다
-  const indicatorStyle = useTabIndicator(
-    TABS.findIndex(t => t.key === tab),
-    width / TABS.length,
-    INDICATOR_WIDTH,
-  );
+  // 훅이 사라졌다 — 액센트 바는 TabAccent 안에서 각자 처리한다
+  const cellWidth = width / TABS.length;
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_KEY)
@@ -157,15 +168,14 @@ function Shell() {
             { backgroundColor: colors.innerHighlight },
           ]}
         />
-        {/* 가로로 움직이는 요소는 이 알약 하나뿐이다 — 아이콘은 제자리에 있는다 */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.indicator,
-            { backgroundColor: colors.primarySoft },
-            indicatorStyle,
-          ]}
-        />
+        {/* 상단 경계 위 액센트 — 활성 탭 구간에서만 이너 하이라이트가 브랜드 색으로 켜진다 */}
+        {TABS.map(({ key }, i) => (
+          <TabAccent
+            key={`accent-${key}`}
+            left={i * cellWidth + (cellWidth - ACCENT_WIDTH) / 2}
+            active={tab === key}
+          />
+        ))}
         {TABS.map(({ key, label, Icon }) => (
           <TabItem
             key={key}
@@ -224,13 +234,13 @@ const styles = StyleSheet.create({
     right: 0,
     height: 1,
   },
-  indicator: {
+  // 활성 탭 표시. 탭바 상단 이너 하이라이트(1px) 위에 2px 로 얹혀 그 선을 대체한다.
+  accent: {
     position: 'absolute',
-    top: spacing.sm,
-    left: 0,
-    width: INDICATOR_WIDTH,
-    height: INDICATOR_HEIGHT,
-    borderRadius: 999,
+    top: 0,
+    width: ACCENT_WIDTH,
+    height: ACCENT_HEIGHT,
+    borderRadius: ACCENT_HEIGHT / 2,
   },
   // 최소 터치 타깃 48
   tabItem: {
