@@ -22,10 +22,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   cancelAnimation,
   Easing,
+  useAnimatedRef,
   useAnimatedStyle,
+  useDerivedValue,
+  useScrollOffset,
   useSharedValue,
   withRepeat,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { Info, RefreshCw, Search, Star } from 'lucide-react-native';
 import type {
@@ -47,7 +51,9 @@ import { StockLogo } from '../components/StockLogo';
 import { SECTOR_ICONS } from '../components/sectorIcons';
 import { ErrorCard } from '../components/ErrorCard';
 import { ScoreRing } from '../components/ScoreRing';
+import { SectorBadge } from '../components/SectorBadge';
 import { SkeletonCard } from '../components/Skeleton';
+import { Sparkline, SPARKLINE_SIZE } from '../components/Sparkline';
 import { TiltCard, TILT_PAD } from '../components/TiltCard';
 import { Stagger, useMotionReduced } from '../components/motion';
 import { Card, Chip } from '../components/ui';
@@ -62,10 +68,11 @@ const VISIBLE_SECTORS = 3;
 const ANIMATED_ITEMS = 8;
 /**
  * 틸트 카드 판 높이 (고정).
- * ponytail: 내용이 로고 1줄 + 이유 1줄(numberOfLines=1)로 잠겨 있어 고정으로 충분하다.
+ * 16(pad) + 36(로고줄) + 6 + 22(스파크라인줄) + 6 + 19(이유) + 16(pad) = 121
+ * ponytail: 내용이 3줄로 잠겨 있어(전부 numberOfLines=1) 고정으로 충분하다.
  *           접근성 글꼴 확대에서 넘치면 onLayout 으로 재는 방식으로 올린다.
  */
-const TILT_CARD_HEIGHT = 88;
+const TILT_CARD_HEIGHT = 122;
 
 const DISCLAIMER =
   'DeTok은 참고 정보만 제공해요. 투자 판단과 책임은 언제나 본인에게 있어요.';
@@ -294,33 +301,41 @@ function SectorSheet({
 interface CardProps {
   rec: Recommendation;
   quote: StockQuote | null;
+  /** 최근 한 달 종가. 없으면 스파크라인을 생략한다 */
+  spark: number[] | null;
   favorite: boolean;
   onPress: (id: string) => void;
   onToggleFavorite: (ticker: string) => void;
   /** 1순위 카드만 3D 틸트 판 위에 올린다. 폭은 호출부가 재준다 */
   tiltWidth?: number;
+  /** 1순위 카드만 — 뷰포트 안 위치(-1..1). 값 변화는 리렌더를 유발하면 안 되므로 비교자에서 뺀다 */
+  scrollProgress?: SharedValue<number>;
 }
 
-/** 표면에 남긴 4개: 로고+종목명 / 등락률 / 점수 링 / 이유 1줄 */
+/** 표면에 남긴 것: 로고+섹터 / 종목명 / 스파크라인 / 등락률 / 점수 링 / 이유 1줄 */
 function CardContent({
   rec,
   quote,
+  spark,
   favorite,
   onToggleFavorite,
-}: Omit<CardProps, 'onPress' | 'tiltWidth'>) {
+}: Omit<CardProps, 'onPress' | 'tiltWidth' | 'scrollProgress'>) {
   const { colors } = useTheme();
   return (
     <View style={styles.rowBetween}>
       <View style={styles.cardBody}>
         <View style={styles.row}>
-          <StockLogo ticker={rec.ticker} name={rec.stockName} size={28} />
+          {/* SectorBadge 가 position:absolute 라 로고를 감싼 View 가 기준 박스가 된다 */}
+          <View>
+            <StockLogo ticker={rec.ticker} name={rec.stockName} size={36} />
+            <SectorBadge sector={rec.sector} />
+          </View>
           <Text
             numberOfLines={1}
             style={[styles.stockName, { color: colors.textPrimary }]}
           >
             {rec.stockName}
           </Text>
-          {quote && <ChangeText pct={quote.changePct} />}
           <Pressable
             onPress={() => onToggleFavorite(rec.ticker)}
             hitSlop={10}
@@ -336,6 +351,18 @@ function CardContent({
             />
           </Pressable>
         </View>
+
+        {/* 흐름(스파크라인)과 오늘(등락률)을 나란히 — 로고 폭만큼 들여쓴다 */}
+        <View style={styles.metricRow}>
+          {spark ? (
+            // 색은 바로 옆 등락률과 맞춘다 — 나란히 놓인 둘이 서로 부정하면 안 된다
+            <Sparkline points={spark} changePct={quote?.changePct} />
+          ) : (
+            <View style={styles.sparkPlaceholder} />
+          )}
+          {quote && <ChangeText pct={quote.changePct} />}
+        </View>
+
         <Text
           numberOfLines={1}
           style={[styles.reason, { color: colors.textSecondary }]}
@@ -363,11 +390,14 @@ export const isSameCard = (a: CardProps, b: CardProps): boolean =>
   a.rec.score === b.rec.score &&
   a.rec.reason === b.rec.reason &&
   a.quote?.changePct === b.quote?.changePct &&
+  // 배열은 참조 비교로 충분하다 — setSparks 는 응답당 1회만 새 객체를 만든다
+  a.spark === b.spark &&
   a.favorite === b.favorite &&
   a.tiltWidth === b.tiltWidth;
 
 const RecommendationCard = React.memo(function RecommendationCardView({
   tiltWidth,
+  scrollProgress,
   onPress,
   ...rest
 }: CardProps) {
@@ -381,7 +411,11 @@ const RecommendationCard = React.memo(function RecommendationCardView({
   // TiltCard 는 사방 TILT_PAD 만큼 투명 여백을 갖는다 — 음수 마진으로 다른 카드와 좌우를 맞춘다
   return (
     <View style={styles.tiltWrap}>
-      <TiltCard width={tiltWidth} height={TILT_CARD_HEIGHT}>
+      <TiltCard
+        width={tiltWidth}
+        height={TILT_CARD_HEIGHT}
+        scrollProgress={scrollProgress}
+      >
         <Pressable
           style={styles.flex}
           onPress={() => onPress(rest.rec.id)}
@@ -399,9 +433,10 @@ export function HomeScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [quotes, setQuotes] = useState<Record<string, StockQuote | null>>({});
+  const [sparks, setSparks] = useState<Record<string, number[]>>({});
   const [slot, setSlot] = useState<BriefingSlot | null>(null);
   const [favoriteTickers, setFavoriteTickers] = useState<string[]>([]);
   const [favoriteSectors, setFavoriteSectors] = useState<Sector[]>([]);
@@ -420,6 +455,19 @@ export function HomeScreen() {
   // 낙관적 업데이트가 항상 최신 관심 목록을 보게 한다 (메모된 카드의 stale closure 방지)
   const favoritesRef = useRef<string[]>([]);
   favoritesRef.current = favoriteTickers;
+
+  // ── 1순위 카드 스크롤 틸트 ────────────────────────────────────────────────
+  // 스크롤 오프셋과 카드 y 만 shared value 로 들고, 각도 계산은 전부 worklet 이다.
+  // JS 왕복이 없으므로 스크롤 프레임에 영향을 주지 않는다.
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollY = useScrollOffset(scrollRef);
+  const heroY = useSharedValue(0);
+  const heroProgress = useDerivedValue(() => {
+    const half = screenHeight / 2;
+    // 카드 중심이 뷰포트 중앙에서 얼마나 벗어났나 → -1(위) ~ 0(중앙) ~ 1(아래)
+    const offset = heroY.value + TILT_CARD_HEIGHT / 2 - scrollY.value - half;
+    return Math.max(-1, Math.min(1, offset / half));
+  });
 
   const load = useCallback(async () => {
     // 브리핑은 부가 정보 — 실패해도 카드만 빠지고 홈은 정상 동작한다
@@ -448,11 +496,17 @@ export function HomeScreen() {
       setFavoriteSectors(favorites.data.sectors);
       setSlot(briefing);
       setError(null);
-      // 시세도 부가 정보 — 실패해도 추천 표시에는 영향 없음
+      // 시세·스파크라인 모두 부가 정보 — 실패해도 추천 표시에는 영향 없다.
+      // 둘 다 배치 엔드포인트라 종목 수와 무관하게 각각 1회다.
       if (recs.data.length > 0) {
+        const tickers = recs.data.map(r => r.ticker);
         api
-          .quotes(recs.data.map(r => r.ticker))
+          .quotes(tickers)
           .then(q => setQuotes(q.data))
+          .catch(() => {});
+        api
+          .sparks(tickers)
+          .then(s => setSparks(s.data))
           .catch(() => {});
       }
     } catch (e) {
@@ -546,15 +600,29 @@ export function HomeScreen() {
   }, [favoriteSectors, sector, recommendations, market]);
 
   const renderCard = (rec: Recommendation, index: number) => (
-    <Stagger key={rec.id} index={index} enabled={index < ANIMATED_ITEMS}>
+    <Stagger
+      key={rec.id}
+      index={index}
+      enabled={index < ANIMATED_ITEMS}
+      // 1순위 카드의 세로 위치만 재면 된다 (틸트 각도용이라 정밀도는 필요 없다)
+      onLayout={
+        index === 0
+          ? e => {
+              heroY.value = e.nativeEvent.layout.y;
+            }
+          : undefined
+      }
+    >
       <RecommendationCard
         rec={rec}
         quote={quotes[rec.ticker] ?? null}
+        spark={sparks[rec.ticker] ?? null}
         favorite={favoriteTickers.includes(rec.ticker)}
         onPress={openDetail}
         onToggleFavorite={toggleFavorite}
         // 오늘의 1순위 하나에만 깊이를 준다 (한 번에 TiltCard 는 1개)
         tiltWidth={index === 0 ? screenWidth - spacing.xl * 2 : undefined}
+        scrollProgress={index === 0 ? heroProgress : undefined}
       />
     </Stagger>
   );
@@ -577,7 +645,8 @@ export function HomeScreen() {
           paused={detailId !== null || searchOpen}
         />
       </View>
-      <ScrollView
+      <Animated.ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
@@ -757,7 +826,7 @@ export function HomeScreen() {
         ) : (
           listRecs.map(renderCard)
         )}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <SectorSheet
         visible={sectorSheetOpen}
@@ -820,6 +889,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   cardBody: { flex: 1, gap: 6 },
+  // 로고(36) + gap(8) 만큼 들여써서 종목명 아래에 정렬한다
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginLeft: 44,
+  },
+  // 스파크라인이 없는 종목도 등락률 위치가 흔들리지 않게 한다
+  sparkPlaceholder: SPARKLINE_SIZE,
   // TiltCard 의 캔버스 여백(TILT_PAD)을 상쇄해 다른 카드와 좌우·상하를 맞춘다
   tiltWrap: { marginHorizontal: -TILT_PAD, marginVertical: -TILT_PAD },
   stockName: { flex: 1, fontSize: 17, fontWeight: '700' },

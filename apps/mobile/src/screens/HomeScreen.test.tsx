@@ -52,6 +52,8 @@ jest.mock('../api/client', () => {
       briefing: () => Promise.reject(new Error('없음')),
       nightBriefing: () => Promise.reject(new Error('없음')),
       quotes: () => ok({}),
+      // 스파크라인도 부가 정보 — 실패해도 카드는 그대로 그려져야 한다 (C-1)
+      sparks: () => Promise.reject(new Error('없음')),
       stockCatalog: () => ok([]),
       toggleFavorite: (ticker: string) => mockToggleFavorite(ticker),
     },
@@ -80,9 +82,10 @@ describe('withFavorite — 티커 하나만 바꾼다', () => {
 });
 
 describe('isSameCard — memo 비교자', () => {
-  const props = (rec: Recommendation) => ({
+  const props = (rec: Recommendation, spark: number[] | null = null) => ({
     rec,
     quote: null,
+    spark,
     favorite: false,
     onPress: () => {},
     onToggleFavorite: () => {},
@@ -98,6 +101,17 @@ describe('isSameCard — memo 비교자', () => {
     expect(isSameCard(props(mockRecs[0]), props({ ...mockRecs[0] }))).toBe(
       true,
     );
+  });
+
+  it('스파크라인이 늦게 도착하면 다시 그린다', () => {
+    const spark = [100, 110];
+    expect(isSameCard(props(mockRecs[0]), props(mockRecs[0], spark))).toBe(
+      false,
+    );
+    // 같은 배열 참조면 다시 그리지 않는다 (setSparks 는 응답당 1회만 새 객체를 만든다)
+    expect(
+      isSameCard(props(mockRecs[0], spark), props(mockRecs[0], spark)),
+    ).toBe(true);
   });
 });
 
