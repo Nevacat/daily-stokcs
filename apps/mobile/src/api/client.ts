@@ -155,6 +155,15 @@ export const api = {
       `/quotes?tickers=${encodeURIComponent(tickers.join(','))}`,
     ),
 
+  /**
+   * 카드용 종가 스파크라인 — 여러 종목을 한 번에.
+   * priceChart 와 달리 종목당 호출이 아니다 (서버가 외부 호출 1회로 처리한다).
+   */
+  sparks: (tickers: string[]) =>
+    request<ApiResponse<Record<string, number[]>>>(
+      `/quotes/spark?tickers=${encodeURIComponent(tickers.join(','))}`,
+    ),
+
   stockCatalog: () =>
     request<ApiResponse<CatalogStockLite[]>>('/stocks/catalog'),
 
