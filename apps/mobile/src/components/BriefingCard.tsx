@@ -31,8 +31,10 @@ export function BriefingCard({
 
       <Text style={[styles.summary, { color: colors.textSecondary }]}>
         오늘 뉴스 {summary.total}건 —{' '}
-        <Text style={{ color: colors.success }}>호재 {summary.positive}</Text> ·{' '}
-        <Text style={{ color: colors.danger }}>악재 {summary.negative}</Text> ·
+        {/* 호재=up(빨강)/악재=down(파랑) — 시세 색과 의미를 통일한다.
+            success(초록)를 쓰면 빨강이 '상승'과 '악재'를 동시에 뜻하게 된다. */}
+        <Text style={{ color: colors.up }}>호재 {summary.positive}</Text> ·{' '}
+        <Text style={{ color: colors.down }}>악재 {summary.negative}</Text> ·
         중립 {summary.neutral}
       </Text>
 

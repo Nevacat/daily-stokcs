@@ -11,12 +11,26 @@ import {
 import { Apple, Check, MessageCircle, UserRound, X } from 'lucide-react-native';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
-import { getAppleIdentityToken, getKakaoAccessToken } from '../auth/socialLogin';
+import {
+  getAppleIdentityToken,
+  getKakaoAccessToken,
+} from '../auth/socialLogin';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from '../auth/terms';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
 type TermsDoc = { title: string; body: string } | null;
+
+/**
+ * 소셜 로그인 버튼 색 — 각 사의 브랜드 가이드가 고정한 값이라 테마 토큰으로 바꿀 수 없다.
+ * (여기 말고 다른 곳에서는 hex 를 직접 쓰지 않는다 — `useTheme().colors` 만 쓴다)
+ */
+const BRAND = {
+  kakaoYellow: '#FEE500',
+  kakaoLabel: '#191919',
+  appleOnLight: '#000000',
+  appleOnDark: '#FFFFFF',
+} as const;
 
 export function LoginScreen() {
   const { colors, scheme } = useTheme();
@@ -40,7 +54,11 @@ export function LoginScreen() {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '로그인에 실패했어요. 다시 시도해주세요.');
+      setError(
+        e instanceof Error
+          ? e.message
+          : '로그인에 실패했어요. 다시 시도해주세요.',
+      );
     } finally {
       setBusy(false);
     }
@@ -51,7 +69,9 @@ export function LoginScreen() {
       if (!guard()) return;
       const accessToken = await getKakaoAccessToken();
       if (!accessToken) {
-        setError('카카오 SDK 미설정 — src/auth/README.md를 참고해 앱 키를 등록해주세요.');
+        setError(
+          '카카오 SDK 미설정 — src/auth/README.md를 참고해 앱 키를 등록해주세요.',
+        );
         return;
       }
       const res = await api.kakaoLogin(accessToken, true);
@@ -63,10 +83,16 @@ export function LoginScreen() {
       if (!guard()) return;
       const result = await getAppleIdentityToken();
       if (!result) {
-        setError('Apple 로그인 미설정 — src/auth/README.md를 참고해 활성화해주세요.');
+        setError(
+          'Apple 로그인 미설정 — src/auth/README.md를 참고해 활성화해주세요.',
+        );
         return;
       }
-      const res = await api.appleLogin(result.identityToken, true, result.nickname);
+      const res = await api.appleLogin(
+        result.identityToken,
+        true,
+        result.nickname,
+      );
       await applyLogin(res.data);
     });
 
@@ -78,7 +104,9 @@ export function LoginScreen() {
     });
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.backgroundSoft }]}>
+    <View
+      style={[styles.container, { backgroundColor: colors.backgroundSoft }]}
+    >
       <View style={styles.hero}>
         <Image
           source={require('../assets/logo.png')}
@@ -104,24 +132,32 @@ export function LoginScreen() {
             style={[
               styles.checkbox,
               {
-                backgroundColor: agreed ? colors.primary : 'transparent',
-                borderColor: agreed ? colors.primary : colors.textDisabled,
+                // 채움 위 라벨은 primaryFill/onPrimaryFill 쌍이어야 한다
+                // (심야는 액센트가 앰버라 흰 체크가 1.7:1 로 묻힌다)
+                backgroundColor: agreed ? colors.primaryFill : 'transparent',
+                borderColor: agreed ? colors.primaryFill : colors.textDisabled,
               },
             ]}
           >
-            {agreed && <Check size={13} color="#FFFFFF" strokeWidth={3} />}
+            {agreed && (
+              <Check size={13} color={colors.onPrimaryFill} strokeWidth={3} />
+            )}
           </View>
           <Text style={[styles.agreeText, { color: colors.textSecondary }]}>
             <Text
               style={[styles.link, { color: colors.primary }]}
-              onPress={() => setDoc({ title: '서비스 이용약관', body: TERMS_OF_SERVICE })}
+              onPress={() =>
+                setDoc({ title: '서비스 이용약관', body: TERMS_OF_SERVICE })
+              }
             >
               이용약관
             </Text>
             {' 및 '}
             <Text
               style={[styles.link, { color: colors.primary }]}
-              onPress={() => setDoc({ title: '개인정보 처리방침', body: PRIVACY_POLICY })}
+              onPress={() =>
+                setDoc({ title: '개인정보 처리방침', body: PRIVACY_POLICY })
+              }
             >
               개인정보 처리방침
             </Text>
@@ -139,7 +175,11 @@ export function LoginScreen() {
           onPress={() => void onKakao()}
           style={[styles.button, styles.kakao, busy && styles.dim]}
         >
-          <MessageCircle size={18} color="#191919" fill="#191919" />
+          <MessageCircle
+            size={18}
+            color={BRAND.kakaoLabel}
+            fill={BRAND.kakaoLabel}
+          />
           <Text style={styles.kakaoText}>카카오로 시작하기</Text>
         </Pressable>
 
@@ -150,20 +190,24 @@ export function LoginScreen() {
           style={[
             styles.button,
             {
-              backgroundColor: scheme === 'dark' ? '#FFFFFF' : '#000000',
+              backgroundColor:
+                scheme === 'dark' ? BRAND.appleOnDark : BRAND.appleOnLight,
             },
             busy && styles.dim,
           ]}
         >
           <Apple
             size={18}
-            color={scheme === 'dark' ? '#000000' : '#FFFFFF'}
-            fill={scheme === 'dark' ? '#000000' : '#FFFFFF'}
+            color={scheme === 'dark' ? BRAND.appleOnLight : BRAND.appleOnDark}
+            fill={scheme === 'dark' ? BRAND.appleOnLight : BRAND.appleOnDark}
           />
           <Text
             style={[
               styles.appleText,
-              { color: scheme === 'dark' ? '#000000' : '#FFFFFF' },
+              {
+                color:
+                  scheme === 'dark' ? BRAND.appleOnLight : BRAND.appleOnDark,
+              },
             ]}
           >
             Apple로 시작하기
@@ -175,7 +219,11 @@ export function LoginScreen() {
           <Pressable
             disabled={busy}
             onPress={() => void onDev()}
-            style={[styles.devButton, { borderColor: colors.border }, busy && styles.dim]}
+            style={[
+              styles.devButton,
+              { borderColor: colors.border },
+              busy && styles.dim,
+            ]}
           >
             <UserRound size={15} color={colors.textSecondary} />
             <Text style={[styles.devText, { color: colors.textSecondary }]}>
@@ -196,8 +244,12 @@ export function LoginScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setDoc(null)}
       >
-        <View style={[styles.docContainer, { backgroundColor: colors.background }]}>
-          <View style={[styles.docHeader, { borderBottomColor: colors.border }]}>
+        <View
+          style={[styles.docContainer, { backgroundColor: colors.background }]}
+        >
+          <View
+            style={[styles.docHeader, { borderBottomColor: colors.border }]}
+          >
             <Text style={[styles.docTitle, { color: colors.textPrimary }]}>
               {doc?.title}
             </Text>
@@ -218,7 +270,12 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'space-between' },
-  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  hero: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
   logo: { width: 96, height: 96, borderRadius: 24 },
   title: { fontSize: 32, fontWeight: '800', marginTop: spacing.sm },
   tagline: { fontSize: 14 },
@@ -249,8 +306,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   dim: { opacity: 0.55 },
-  kakao: { backgroundColor: '#FEE500' },
-  kakaoText: { color: '#191919', fontSize: 15, fontWeight: '700' },
+  kakao: { backgroundColor: BRAND.kakaoYellow },
+  kakaoText: { color: BRAND.kakaoLabel, fontSize: 15, fontWeight: '700' },
   appleText: { fontSize: 15, fontWeight: '700' },
   devButton: {
     flexDirection: 'row',

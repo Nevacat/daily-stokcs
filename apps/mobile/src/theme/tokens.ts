@@ -1,83 +1,283 @@
 /**
- * DeTok Design System v1.1 → 코드 토큰 (docs/design-system.md)
- * v1.1: 사용자 피드백으로 primary를 토스 계열의 차분한 블루로 완화하고,
- * 채도 높은 면적을 줄이기 위해 primarySoft(옅은 블루 배경)를 도입.
- * 라이트가 기준. 다크는 "검정 배경 금지" 원칙에 따라 딥 네이비 계열.
+ * DeTok Design System v2.0 — Dark-first + Late-night Amber
+ *
+ * 기준 테마가 dark 로 바뀌었다. light 는 보조.
+ * 모든 hex 는 APCA 0.1.9 / WCAG 2.x / OKLCH 로 실측 검증했다 (표는 docs/design-system.md).
+ *
+ * 설계 규칙 (어기지 말 것)
+ *  1) 텍스트에 opacity 를 쓰지 않는다. 4단계 solid hex 만 쓴다.
+ *     opacity 를 쓰면 표면이 바뀔 때마다 실효 대비가 예측 불가로 흔들린다.
+ *  2) 보더는 알파다. 단일 hex 보더는 다층 다크에서 반드시 어느 한 층에서 소멸한다.
+ *  3) 깊이 신호 우선순위: 표면 명도 > 알파 보더 > 상단 이너 하이라이트 > 그림자.
+ *     다크에서 그림자는 "떠 있음"이 아니라 "얼룩"으로 읽힌다.
+ *  4) 시세/감성은 한국 관례로 통일한다. 상승·호재 = up(빨강), 하락·악재 = down(파랑).
+ *     색만으로 방향을 전달하지 않는다 — ▲▼ 와 부호를 항상 함께 쓴다 (WCAG 1.4.1).
+ *  5) 텍스트 파랑은 "하락" 전용이다. 링크·CTA 에 파랑 텍스트를 쓰지 않는다.
  */
 
+export type ThemeName = 'light' | 'dark' | 'night';
+
+/** 브랜드 원색 — 로고·스플래시·앱 아이콘 등 테마 무관 자산 전용 */
 export const palette = {
-  primary: '#3182F6', // Calm Blue — CTA (토스 계열의 눈이 편한 블루)
-  primaryHover: '#2272EB',
-  primaryPressed: '#1B64DA',
-  violet: '#9D86FF', // Soft Violet — 그라디언트·브랜드 포인트 (로고 유지)
-  indigo: '#6C8CF5', // Soft Indigo — 아이콘, Tag, Badge (채도 완화)
-  success: '#22C55E',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  marketIndex: '#64748B',
+  primary: '#3182F6', // Calm Blue — 브랜드 원색 (UI 텍스트로 직접 쓰지 않는다)
+  violet: '#9D86FF', // Soft Violet — 로고 그라디언트
   gradient: ['#A882FF', '#7F8CFF', '#5B5CFF'] as const,
 } as const;
 
 export interface ThemeColors {
+  // ── 표면 (엘리베이션 사다리, OKLCH L 등간격 ~0.027) ──
+  /** 앱 캔버스 / 스크롤 배경 */
   background: string;
+  /** 헤더·탭바·섹션 배경 (구 backgroundSoft, 이름 유지) */
   backgroundSoft: string;
+  /** 종목 카드, 뉴스 아이템 */
   card: string;
+  /** 카드 press 상태 배경 */
+  cardPressed: string;
+  /** 모달·바텀시트·칩 */
   surface: string;
-  /** 옅은 primary 배경 — 선택 칩·강조 배경 (큰 면적에 원색 대신 사용) */
-  primarySoft: string;
+  /** 팝오버·툴팁·스낵바 */
+  surfaceHigh: string;
+  /** 모달 뒤 딤 (순검정 아님) */
+  scrim: string;
+
+  // ── 텍스트 (solid 4단계, opacity 금지) ──
   textPrimary: string;
   textSecondary: string;
+  /** 캡션·타임스탬프 */
+  textTertiary: string;
   textDisabled: string;
+
+  // ── 보더 (전부 알파) ──
+  /** 카드 기본 보더 */
+  borderSubtle: string;
+  /** 기존 이름 유지 — 시트·인풋 등 확실히 보여야 하는 경계 */
   border: string;
+  /** 포커스·선택 경계 */
+  borderStrong: string;
+  /** 리스트 구분선 */
+  divider: string;
+  /** 카드 상단 1px — 다크에서 "그림자" 역할을 대신한다 */
+  innerHighlight: string;
+
+  // ── 브랜드 / 인터랙션 ──
+  /** 액센트: 아이콘·활성 탭·활성 칩 텍스트·포커스 링. CTA 배경으로 쓰지 말 것 */
   primary: string;
+  /** CTA 버튼 배경 */
+  primaryFill: string;
+  /** CTA 버튼 press 배경 (기존 이름 유지) */
   primaryPressed: string;
+  /** CTA 버튼 라벨 색 — night 는 어두운 라벨이다 */
+  onPrimaryFill: string;
+  /** 선택 칩·정보 배너 배경 */
+  primarySoft: string;
+  /** 브랜드 포인트·그라디언트 상단. 값 표현에 쓰지 말 것 */
   violet: string;
+  /** 섹터 태그 — primary 와 같은 값 (블루 계열 3개 혼용 금지) */
   indigo: string;
+
+  // ── 시세·감성 세만틱 ──
+  /** 상승 / 호재 (한국 관례 = 빨강) */
+  up: string;
+  /** 하락 / 악재 (한국 관례 = 파랑) */
+  down: string;
+  /** 보합 / 중립 */
+  flat: string;
+  /** 호재 칩 배경 */
+  upSoft: string;
+  /** 악재 칩 배경 */
+  downSoft: string;
+
+  // ── 상태 ──
+  /** 저장 완료 등 순수 성공 피드백 전용. 시세·감성에 쓰지 말 것 */
   success: string;
+  /** 오류·파괴적 액션. up 과 같은 빨강 — 맥락(아이콘·레이아웃)으로 구분한다 */
   danger: string;
+  /** 수집 실패·지연 */
   warning: string;
+
+  // ── 그래픽 ──
+  /** 다층 카테고리 차트 (최대 6계열). 8섹터는 아이콘+라벨로 식별 */
+  chart: readonly string[];
+  /** 오로라 배경 blob 피크색 3개. 값이 곧 최댓값이라 카드보다 밝아질 수 없다 */
+  aurora: readonly [string, string, string];
+  /** 떠 있는 요소 전용 (FAB·시트·스낵바). 엘리베이션 랭킹에는 쓰지 말 것 */
   shadow: string;
 }
 
+/**
+ * DARK (기본) — 중립 램프 OKLCH H=265, C=0.030 고정.
+ * 엘리베이션이 올라도 채도는 오르지 않는다 (야간에 화면이 파랗게 뜨는 것 방지).
+ */
+export const darkColors: ThemeColors = {
+  background: '#0E1422', //  L .193  캔버스
+  backgroundSoft: '#141A29', //  L .220  vs bg 1.06
+  card: '#1A2130', //  L .248  vs bg 1.14
+  cardPressed: '#202736', //  L .273  vs bg 1.23
+  surface: '#262E3D', //  L .300  vs bg 1.35
+  surfaceHigh: '#323949', //  L .345  vs bg 1.59
+  scrim: 'rgba(6,11,24,0.72)',
+
+  textPrimary: '#DADEE7', // vs bg 13.65:1  APCA -85.8  (상한 -90 아래)
+  textSecondary: '#AFB7C5', // vs bg  9.11:1  APCA -62.4
+  textTertiary: '#9199A9', // vs bg  6.42:1  APCA -46.2
+  textDisabled: '#6F7888', // vs bg  4.13:1  APCA -30.0  (APCA 최소치)
+
+  borderSubtle: 'rgba(255,255,255,0.06)', // card 위 #282E3C (1.19)
+  border: 'rgba(255,255,255,0.10)', // card 위 #313745 (1.35)
+  borderStrong: 'rgba(255,255,255,0.16)', // card 위 #3F4551 (1.67)
+  divider: 'rgba(255,255,255,0.07)',
+  innerHighlight: 'rgba(255,255,255,0.07)',
+
+  primary: '#A6B0FF', // vs bg 9.00:1  APCA -61.8  H=278 (블루-바이올렛)
+  primaryFill: '#1B6FE1', // 흰 라벨 4.76:1  APCA 77.9  ← 다크 CTA 는 오히려 어둡게
+  primaryPressed: '#1560C8', // 흰 라벨 5.93:1
+  onPrimaryFill: '#FFFFFF',
+  primarySoft: '#1E3150', // #3182F6 16% over card
+  violet: '#D2A3FF', // vs bg 9.13:1  H=307  그라디언트·브랜드 포인트 전용
+  indigo: '#A6B0FF', // = primary
+
+  up: '#FF9A8C', // vs bg 8.98:1  APCA -61.9  H=29  C=0.124
+  down: '#69B2F7', // vs bg 8.16:1  APCA -57.1  H=249 C=0.124
+  flat: '#B0B6C3', // vs bg 9.04:1  APCA -62.0
+  upSoft: '#3F343F', // up 16% over card — 칩 위 up 텍스트 5.78:1
+  downSoft: '#273850', // down 16% over card — 칩 위 down 텍스트 5.27:1
+
+  success: '#94C18E', // H=142 (민트 아님) — 완료 피드백 전용
+  danger: '#FF9A8C', // = up
+  warning: '#E8B45C', // vs bg 9.73:1
+
+  chart: ['#85BCFF', '#A090E3', '#EFA9E8', '#EE8676', '#FCC176', '#8594A4'],
+  aurora: ['#02193D', '#211136', '#121834'], // 전부 L≈0.221 < card L 0.248
+  shadow: 'rgba(4,7,14,0.55)',
+};
+
+/**
+ * NIGHT (심야) — OKLCH H=62~78, 웜 시프트.
+ * textPrimary CCT 는 7111K → 5321K, 액센트는 3112K (iOS Night Shift 최난색과 동급).
+ * 브랜드 블루는 violet(#B9A6E0) 로 살아남는다 — 로고·그라디언트·섹터 태그.
+ */
+export const nightColors: ThemeColors = {
+  /**
+   * NIGHT (심야) — 다크와 같은 남색 계열(H=265)을 유지하되 **더 어둡고 덜 밝다**.
+   *
+   * v2.2: 앰버(웜 시프트)를 버렸다. 표면·텍스트를 세피아로 칠하니 화면 전체가
+   * 한 색으로 눌려 탁했고, 브랜드 블루·바이올렛과도 조화가 깨졌다.
+   *
+   * 눈이 편한 실제 기전은 색온도가 아니라 **절대 휘도**다. 청색광-멜라토닌 근거는
+   * 과장된 편이라 색을 비틀어 얻는 이득이 크지 않다. 그래서 심야는 색상을 돌리는
+   * 대신 배경 휘도를 다크의 47% 로 낮추고 텍스트 상한도 함께 내렸다
+   * (13.65:1 → 12.24:1) — 어두운 방에서 흰 글씨가 번지는 헤일레이션을 줄인다.
+   * 순수 검정은 쓰지 않는다 (브랜드 가이드).
+   */
+  background: '#070B13', //  휘도 0.0033 — 다크(#0E1422)의 47%
+  backgroundSoft: '#0C111B',
+  card: '#111725',
+  cardPressed: '#161C2B',
+  surface: '#1C2333',
+  surfaceHigh: '#272E40',
+  scrim: 'rgba(3,5,10,0.76)',
+
+  textPrimary: '#C6CCDA', // vs bg 12.24:1 (다크 13.65 보다 낮춰 헤일레이션 억제)
+  textSecondary: '#98A0B2', // vs bg  7.51:1
+  textTertiary: '#7C8496', // vs bg  5.25:1
+  textDisabled: '#6A7285', // vs bg  4.09:1
+
+  borderSubtle: 'rgba(255,255,255,0.06)',
+  border: 'rgba(255,255,255,0.10)',
+  borderStrong: 'rgba(255,255,255,0.16)',
+  divider: 'rgba(255,255,255,0.07)',
+  innerHighlight: 'rgba(255,255,255,0.07)',
+
+  // 액센트도 다크보다 한 단계 죽인다 — 어두운 방에서 튀지 않게
+  primary: '#8E9BE8', // vs bg 7.51:1 (다크 #A6B0FF 보다 차분)
+  primaryFill: '#2A5DB0', // 흰 라벨 6.38:1
+  primaryPressed: '#224E97',
+  onPrimaryFill: '#FFFFFF',
+  primarySoft: '#18223A', // 칩 위 primary 6.02:1
+  violet: '#B190DB', // vs bg 7.39:1 — 브랜드 아이덴티티
+  indigo: '#8E9BE8',
+
+  up: '#E8887A', // vs bg 7.72:1
+  down: '#5F9FDC', // vs bg 7.01:1
+  flat: '#969DAA', // vs bg 7.22:1
+  upSoft: '#2E2230', // 칩 위 up 5.93:1
+  downSoft: '#152538', // 칩 위 down 5.53:1
+
+  success: '#7FA97C',
+  danger: '#E8887A',
+  warning: '#C9A253',
+
+  chart: ['#6FA8E8', '#8C86D0', '#CE93D8', '#DA8272', '#D9AC63', '#78889A'],
+  aurora: ['#04122C', '#140A28', '#0A1026'], // 전부 card(L .0087) 보다 어둡다
+  shadow: 'rgba(2,4,8,0.62)',
+};
+
+/** LIGHT (보조) — 라이트는 그림자로 깊이를 만든다. 표면 사다리를 쓰지 않는다. */
 export const lightColors: ThemeColors = {
   background: '#FFFFFF',
   backgroundSoft: '#F7F8FA',
   card: '#FFFFFF',
-  surface: '#F2F4F8',
-  primarySoft: '#EAF2FE',
-  textPrimary: '#191F28', // 토스 그레이 계열 — 순검정보다 부드럽게
-  textSecondary: '#6B7684',
-  textDisabled: '#B0B8C1',
+  cardPressed: '#EDF0F3',
+  surface: '#F2F4F6',
+  surfaceHigh: '#FFFFFF',
+  scrim: 'rgba(23,28,40,0.45)',
+
+  textPrimary: '#191F28', // 16.56:1  APCA 103.5
+  textSecondary: '#4E5968', //  7.11:1  APCA  84.7
+  textTertiary: '#727D8B', //  4.18:1  APCA  68.8
+  textDisabled: '#AAB2BC', //  2.14:1  APCA  42.1
+
+  borderSubtle: 'rgba(23,28,40,0.06)',
   border: '#E5E8EB',
-  primary: palette.primary,
-  primaryPressed: palette.primaryPressed,
-  violet: palette.violet,
-  indigo: palette.indigo,
-  success: palette.success,
-  danger: palette.danger,
-  warning: palette.warning,
+  borderStrong: 'rgba(23,28,40,0.16)',
+  divider: 'rgba(23,28,40,0.07)',
+  innerHighlight: 'transparent', // 라이트에는 이너 하이라이트가 필요 없다
+
+  primary: '#5B58D6', //  5.51:1  APCA 77.1  H=279
+  primaryFill: '#1D5FD8', // 흰 라벨 5.71:1  (기존 #3182F6 은 3.71:1 로 AA 실패였다)
+  primaryPressed: '#1A50BC', // 흰 라벨 7.20:1
+  onPrimaryFill: '#FFFFFF',
+  primarySoft: '#EFEFF9',
+  violet: '#7B3FE4',
+  indigo: '#5B58D6',
+
+  up: '#C62633', //  5.64:1  칩 위 4.66:1
+  down: '#0F5FB8', //  6.27:1  칩 위 5.24:1
+  flat: '#6B7684', //  4.62:1
+  upSoft: '#F8E5E7',
+  downSoft: '#E2ECF6',
+
+  success: '#137A45',
+  danger: '#C62633',
+  warning: '#A8690F',
+
+  chart: ['#2F7BD6', '#6C5BC4', '#B65AA8', '#C9614C', '#B0821F', '#5C6B7A'],
+  aurora: ['#EFF3FE', '#F4EFFC', '#FBF1F4'],
   shadow: 'rgba(40,50,90,0.06)',
 };
 
-export const darkColors: ThemeColors = {
-  background: '#141622', // 딥 네이비 (순수 검정 금지)
-  backgroundSoft: '#1A1D2E',
-  card: '#1D2032',
-  surface: '#252A44',
-  primarySoft: '#1F3252',
-  textPrimary: '#F2F3F8',
-  textSecondary: '#9AA1B5',
-  textDisabled: '#4C5266',
-  border: '#282D48',
-  primary: '#4E93F8', // 다크 배경에서 가독성 위해 한 단계 밝게
-  primaryPressed: '#3182F6',
-  violet: palette.violet,
-  indigo: '#7E9AF7',
-  success: '#34D57B',
-  danger: '#F87171',
-  warning: '#FBBF24',
-  shadow: 'rgba(0,0,0,0.35)',
+export const themes: Record<ThemeName, ThemeColors> = {
+  light: lightColors,
+  dark: darkColors,
+  night: nightColors,
 };
+
+/**
+ * 등락 색 단일 진입점.
+ * ui.tsx / PriceChartCard.tsx / HistoryScreen.tsx 에 흩어진 삼항식을 전부 이걸로 교체한다.
+ * HistoryScreen 은 현재 미국식(상승=녹색)으로 반대이므로 이 교체가 곧 버그 수정이다.
+ */
+export const changeColor = (pct: number, c: ThemeColors): string =>
+  pct > 0 ? c.up : pct < 0 ? c.down : c.flat;
+
+/** 색만으로 방향을 전달하지 않기 위한 기호 (WCAG 1.4.1) */
+export const changeMark = (pct: number): string =>
+  pct > 0 ? '▲' : pct < 0 ? '▼' : '—';
+
+/** 섹터 8개 → 차트 6계열 매핑. 색이 겹치는 2쌍은 아이콘+라벨로 식별한다. */
+export const sectorChartColor = (sectorIndex: number, c: ThemeColors): string =>
+  c.chart[sectorIndex % c.chart.length];
 
 export const radius = {
   card: 20,
@@ -92,4 +292,42 @@ export const spacing = {
   lg: 16,
   xl: 20,
   xxl: 28,
+} as const;
+
+/**
+ * 다크 타이포 보정 — 다크 배경에서 글리프는 광학적으로 굵어 보인다(irradiation).
+ * 한글은 라틴보다 획 밀도가 높아 헤일레이션에 더 취약하다.
+ */
+export const typography = {
+  /** 라이트에서 600 이던 것을 다크/심야에서는 500 으로 내린다 */
+  bodyWeight: { light: '600', dark: '500', night: '500' },
+  /** Raycast 가 명시적으로 채택한 값 */
+  letterSpacing: { light: 0, dark: 0.2, night: 0.3 },
+  /** 야간 독서 기준 */
+  lineHeightRatio: 1.6,
+  /** 다크에서 금지: 12px 이하 + weight 300 이하 조합 */
+  minSizeForLightWeight: 13,
+} as const;
+
+/** 모션 스펙 단일 소스 (§3 모션 표와 1:1) */
+export const motion = {
+  duration: {
+    micro: 120, // press in/out
+    fast: 180, // 칩·탭 전환
+    base: 260, // 카드 진입, 페이드
+    slow: 420, // 모달·시트
+    theme: 600, // 테마 크로스페이드
+  },
+  /** cubic-bezier — Easing.bezier(...) 인자와 동일 순서 */
+  easing: {
+    standard: [0.22, 1, 0.36, 1], // easeOutQuint — 진입 기본
+    exit: [0.4, 0, 1, 1], // easeIn — 퇴장
+    press: [0.2, 0, 0, 1],
+  },
+  spring: {
+    card: { damping: 18, stiffness: 180, mass: 0.9 },
+    tilt: { damping: 14, stiffness: 120 },
+    sheet: { damping: 22, stiffness: 200 },
+  },
+  stagger: 45, // 리스트 아이템 간 지연 (ms), 최대 6개까지만 적용
 } as const;

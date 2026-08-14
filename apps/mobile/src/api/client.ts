@@ -11,11 +11,15 @@ import type {
   Favorites,
   HistoryEntry,
   NewsItem,
+  NightBriefing,
+  PaperPortfolio,
   Recommendation,
   Sector,
   Sentiment,
   SentimentTrend,
+  StockComparison,
   StockDetail,
+  StockEvent,
   StockQuote,
   UserProfile,
 } from '@daily-stocks/shared';
@@ -54,7 +58,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       body !== null &&
       typeof body === 'object' &&
       'error' in body &&
-      typeof (body as { error: { message?: unknown } }).error?.message === 'string'
+      typeof (body as { error: { message?: unknown } }).error?.message ===
+        'string'
         ? (body as { error: { message: string } }).error.message
         : `요청이 실패했어요 (${res.status})`;
     throw new Error(message);
@@ -92,7 +97,11 @@ export const api = {
       body: JSON.stringify({ accessToken, termsAgreed }),
     }),
 
-  appleLogin: (identityToken: string, termsAgreed: boolean, nickname?: string) =>
+  appleLogin: (
+    identityToken: string,
+    termsAgreed: boolean,
+    nickname?: string,
+  ) =>
     request<ApiResponse<AuthResponse>>('/auth/apple', {
       method: 'POST',
       body: JSON.stringify({ identityToken, termsAgreed, nickname }),
@@ -104,7 +113,8 @@ export const api = {
     request<ApiResponse<{ removed: true }>>('/auth/me', { method: 'DELETE' }),
 
   // --- 데이터 ---
-  collect: () => request<ApiResponse<CollectRun>>('/collect', { method: 'POST' }),
+  collect: () =>
+    request<ApiResponse<CollectRun>>('/collect', { method: 'POST' }),
 
   collectStatus: () =>
     request<ApiResponse<{ lastRun?: CollectRun }>>('/collect/status'),
@@ -115,11 +125,13 @@ export const api = {
     ),
 
   recommendationDetail: (id: string) =>
-    request<ApiResponse<{ recommendation: Recommendation; evidence: NewsItem[] }>>(
-      `/recommendations/${encodeURIComponent(id)}`,
-    ),
+    request<
+      ApiResponse<{ recommendation: Recommendation; evidence: NewsItem[] }>
+    >(`/recommendations/${encodeURIComponent(id)}`),
 
-  news: (params: { sector?: Sector; sentiment?: Sentiment; cursor?: string } = {}) => {
+  news: (
+    params: { sector?: Sector; sentiment?: Sentiment; cursor?: string } = {},
+  ) => {
     const query = new URLSearchParams();
     if (params.sector) query.set('sector', params.sector);
     if (params.sentiment) query.set('sentiment', params.sentiment);
@@ -129,6 +141,9 @@ export const api = {
   },
 
   briefing: () => request<ApiResponse<DailyBriefing>>('/briefing'),
+
+  /** 나이트 브리핑 (KST 21:00~05:59 홈 슬롯) — 인증 불필요 */
+  nightBriefing: () => request<ApiResponse<NightBriefing>>('/briefing/night'),
 
   priceChart: (ticker: string, range: ChartRange) =>
     request<ApiResponse<PriceChart | null>>(
@@ -140,11 +155,34 @@ export const api = {
       `/quotes?tickers=${encodeURIComponent(tickers.join(','))}`,
     ),
 
+  /**
+   * 카드용 종가 스파크라인 — 여러 종목을 한 번에.
+   * priceChart 와 달리 종목당 호출이 아니다 (서버가 외부 호출 1회로 처리한다).
+   */
+  sparks: (tickers: string[]) =>
+    request<ApiResponse<Record<string, number[]>>>(
+      `/quotes/spark?tickers=${encodeURIComponent(tickers.join(','))}`,
+    ),
+
   stockCatalog: () =>
     request<ApiResponse<CatalogStockLite[]>>('/stocks/catalog'),
 
   stockDetail: (ticker: string) =>
     request<ApiResponse<StockDetail>>(`/stocks/${encodeURIComponent(ticker)}`),
+
+  /** 종목 비교 — 2~3개 (서버가 개수를 검증한다) */
+  compareStocks: (tickers: string[]) =>
+    request<ApiResponse<StockComparison[]>>(
+      `/stocks/compare?tickers=${encodeURIComponent(tickers.join(','))}`,
+    ),
+
+  /** 예정 이벤트 — tickers 생략 시 관심 종목 기준(인증 필요), 지정 시 해당 종목 */
+  events: (tickers?: string[]) =>
+    request<ApiResponse<StockEvent[]>>(
+      tickers?.length
+        ? `/events?tickers=${encodeURIComponent(tickers.join(','))}`
+        : '/events',
+    ),
 
   tickerTrend: (ticker: string) =>
     request<ApiResponse<SentimentTrend>>(
@@ -155,6 +193,9 @@ export const api = {
     request<ApiResponse<HistoryEntry[]>>(`/history?limit=${limit}`),
 
   favorites: () => request<ApiResponse<Favorites>>('/favorites'),
+
+  /** 모의 포트폴리오 — 담은 시점 가격 대비 등락률 (인증 필요) */
+  portfolio: () => request<ApiResponse<PaperPortfolio>>('/favorites/portfolio'),
 
   toggleFavorite: (ticker: string) =>
     request<ApiResponse<Favorites>>(
