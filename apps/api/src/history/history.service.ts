@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { HistoryEntry, Recommendation } from '@daily-stocks/shared';
 import { JsonStore } from '../common/json-store';
+import { changePct } from '../common/pct';
 
 /** 보관 일수 상한 (무료 티어 정책은 기획서 §3.7에서 확정) */
 const MAX_DAYS = 30;
@@ -56,11 +57,11 @@ export class HistoryService {
       recommendations: entry.recommendations.map((rec) => {
         const atRec = rec.priceAtRecommendation ?? null;
         const current = currentPrices.get(rec.ticker) ?? null;
-        const changePct =
-          atRec !== null && current !== null && atRec > 0
-            ? Math.round(((current - atRec) / atRec) * 10000) / 100
-            : null;
-        return { ...rec, currentPrice: current, changePct };
+        return {
+          ...rec,
+          currentPrice: current,
+          changePct: changePct(atRec, current),
+        };
       }),
     }));
   }
