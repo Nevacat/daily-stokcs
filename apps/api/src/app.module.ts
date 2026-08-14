@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { BriefingModule } from './briefing/briefing.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { CollectModule } from './collect/collect.module';
+import { EventsModule } from './events/events.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { HistoryModule } from './history/history.module';
 import { NewsModule } from './news/news.module';
@@ -28,6 +29,7 @@ import { TrendsModule } from './trends/trends.module';
     TrendsModule,
     NotificationsModule,
     StocksModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

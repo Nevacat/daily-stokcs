@@ -109,6 +109,64 @@ describe('PriceService (Yahoo 시세)', () => {
     expect(calledUrl(1)).toContain('range=1mo&interval=1d');
   });
 
+  it('차트: 기준선이 0이면 null로 준다 (앱의 Infinity% 방어)', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          chart: {
+            result: [
+              {
+                meta: { currency: 'KRW', chartPreviousClose: 0 },
+                timestamp: [1784800000, 1784800300],
+                indicators: { quote: [{ close: [265000, 270000] }] },
+              },
+            ],
+          },
+        }),
+    });
+    const chart = await service.getChart('005930', '1d');
+    expect(chart?.points).toHaveLength(2); // 차트 자체는 그대로 준다
+    expect(chart?.previousClose).toBeNull();
+  });
+
+  it('스파크라인: 여러 종목을 외부 호출 1회로 받고 null 종가를 거른다', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          spark: {
+            result: [
+              {
+                symbol: '005930.KS',
+                response: [
+                  { indicators: { quote: [{ close: [70000, null, 72000] }] } },
+                ],
+              },
+              {
+                symbol: 'NVDA',
+                response: [{ indicators: { quote: [{ close: [200, 210] }] } }],
+              },
+            ],
+          },
+        }),
+    });
+
+    const sparks = await service.getSparks(['005930', 'NVDA', '005930']);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(calledUrl(0)).toContain('symbols=005930.KS%2CNVDA');
+    expect(sparks['005930']).toEqual([70000, 72000]);
+    expect(sparks.NVDA).toEqual([200, 210]);
+  });
+
+  it('스파크라인: 실패해도 500 없이 빈 결과, 재조회는 캐시가 막는다', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('network'));
+    expect(await service.getSparks(['005930'])).toEqual({});
+    expect(await service.getSparks(['005930'])).toEqual({});
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('getPrices는 중복 티커를 한 번만 조회한다', async () => {
     const prices = await service.getPrices(['005930', '005930', 'NVDA']);
     expect(fetchMock).toHaveBeenCalledTimes(2);
