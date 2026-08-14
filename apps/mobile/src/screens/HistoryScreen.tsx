@@ -9,13 +9,19 @@ import {
 } from 'react-native';
 import { CalendarDays } from 'lucide-react-native';
 import type { HistoryEntry } from '@daily-stocks/shared';
-import { SECTOR_LABELS } from '@daily-stocks/shared';
+import { SECTOR_LABELS, SECTORS } from '@daily-stocks/shared';
 import { api } from '../api/client';
 import { ErrorCard } from '../components/ErrorCard';
 import { SkeletonCard } from '../components/Skeleton';
-import { Card, ScorePill } from '../components/ui';
+import { ScoreRing } from '../components/ScoreRing';
+import { Card } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
-import { spacing } from '../theme/tokens';
+import {
+  changeColor,
+  changeMark,
+  sectorChartColor,
+  spacing,
+} from '../theme/tokens';
 import { StockDetailModal } from './StockDetailModal';
 
 function formatDate(date: string): string {
@@ -38,7 +44,9 @@ export function HistoryScreen() {
       setEntries(res.data);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.');
+      setError(
+        e instanceof Error ? e.message : '히스토리를 불러오지 못했어요.',
+      );
     } finally {
       setLoading(false);
     }
@@ -65,8 +73,6 @@ export function HistoryScreen() {
         />
       }
     >
-      <Text style={[styles.title, { color: colors.textPrimary }]}>히스토리</Text>
-
       {error && (
         <ErrorCard
           message={error}
@@ -93,7 +99,9 @@ export function HistoryScreen() {
           <View key={entry.date} style={styles.section}>
             <View style={styles.sectionHeader}>
               <CalendarDays size={15} color={colors.indigo} />
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              >
                 {formatDate(entry.date)}
               </Text>
               <Text style={[styles.count, { color: colors.textDisabled }]}>
@@ -114,30 +122,43 @@ export function HistoryScreen() {
                   ]}
                 >
                   <View style={styles.recInfo}>
-                    <Text style={[styles.stockName, { color: colors.textPrimary }]}>
+                    <Text
+                      style={[styles.stockName, { color: colors.textPrimary }]}
+                    >
                       {rec.stockName}
                     </Text>
-                    <Text style={[styles.sectorText, { color: colors.indigo }]}>
+                    {/* 홈 카드의 섹터 배지와 같은 색 체계 — 섹터마다 다른 색이어야
+                        두 화면에서 같은 섹터가 같은 색으로 읽힌다 */}
+                    <Text
+                      style={[
+                        styles.sectorText,
+                        {
+                          color: sectorChartColor(
+                            SECTORS.indexOf(rec.sector),
+                            colors,
+                          ),
+                        },
+                      ]}
+                    >
                       {SECTOR_LABELS[rec.sector]}
                     </Text>
                   </View>
                   <View style={styles.recRight}>
                     {/* 등락률 — 주가 API 키(KIS) 설정 시에만 내려옴 */}
+                    {/* 여기만 미국식(상승=초록)이라 앱 안에서 의미가 뒤집혀 있었다.
+                        changeColor/changeMark 로 국내 관례(상승=빨강 ▲)에 맞춘다. */}
                     {rec.changePct != null && (
                       <Text
                         style={[
                           styles.changePct,
-                          {
-                            color:
-                              rec.changePct >= 0 ? colors.success : colors.danger,
-                          },
+                          { color: changeColor(rec.changePct, colors) },
                         ]}
                       >
-                        {rec.changePct >= 0 ? '+' : ''}
-                        {rec.changePct}%
+                        {changeMark(rec.changePct)}{' '}
+                        {Math.abs(rec.changePct).toFixed(2)}%
                       </Text>
                     )}
-                    <ScorePill score={rec.score} />
+                    <ScoreRing score={rec.score} />
                   </View>
                 </Pressable>
               ))}
@@ -159,8 +180,8 @@ export function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.xl, gap: spacing.lg },
-  title: { fontSize: 22, fontWeight: '800' },
+  // 제목은 기록 탭(RecordsScreen) 헤더가 담당한다
+  content: { padding: spacing.xl, paddingTop: spacing.md, gap: spacing.lg },
   section: { gap: spacing.sm },
   sectionHeader: {
     flexDirection: 'row',

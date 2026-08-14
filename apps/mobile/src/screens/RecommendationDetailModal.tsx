@@ -20,7 +20,8 @@ import { api, formatKst, openExternalUrl } from '../api/client';
 import { PriceChartCard } from '../components/PriceChartCard';
 import { TrendChart } from '../components/TrendChart';
 import { StockLogo } from '../components/StockLogo';
-import { Card, QuoteLine, ScorePill, SentimentBadge } from '../components/ui';
+import { ScoreRing } from '../components/ScoreRing';
+import { Card, QuoteLine, SentimentBadge } from '../components/ui';
 import { useTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -132,7 +133,7 @@ export function RecommendationDetailModal({
                       추천 시각 {formatKst(recommendation.recommendedAt)}
                     </Text>
                   </View>
-                  <ScorePill score={recommendation.score} />
+                  <ScoreRing score={recommendation.score} />
                 </View>
               </Card>
 
